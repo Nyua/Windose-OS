@@ -1,0 +1,16 @@
+
+> windose-os@0.0.0 dev
+> vite
+
+Port 5173 is in use, trying another one...
+
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m294[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m7:15:26 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.vue, /src/components/ControlPanel.vue[22m
+[2m7:15:52 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Desktop.vue[22m
+[2m7:16:19 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Stream.vue, /src/components/Stream.vue?vue&type=style&index=0&scoped=2af8f7fa&lang.css[22m
+[2m7:25:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Desktop.vue[22m
+[2m7:27:02 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Stream.vue, /src/components/Stream.vue?vue&type=style&index=0&scoped=2af8f7fa&lang.css[22m
+[2m7:48:09 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Stream.vue, /src/components/Stream.vue?vue&type=style&index=0&scoped=2af8f7fa&lang.css[22m
