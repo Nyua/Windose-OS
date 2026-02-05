@@ -21,7 +21,7 @@ Phase 2 - The Look
 - Phase 2 note: Use WacOS as an additional reference for UI fidelity (https://github.com/brandonduong/WacOS).
 
 Phase 3 - The Brain
-- Set up Redux Toolkit store for Stats and Time.
+- Set up Pinia store for Stats and Time.
 - No Next Day logic in Phase 3 (system time only).
 
 Phase 4 - The Apps
@@ -44,7 +44,7 @@ Implementation Implication: Add a Credits view in Settings/Control Panel and sur
 | ADR | Topic | Status |
 | --- | --- | --- |
 | ADR-0001 | Frontend framework (React vs Vue) | Accepted |
-| ADR-0002 | State management (Redux Toolkit vs Zustand) | Accepted |
+| ADR-0002 | State management (Pinia) | Accepted |
 | ADR-0003 | Time model (system clock vs in-game day/time) | Accepted |
 | ADR-0004 | JINE chat scope (local-only vs multi-user backend) | Accepted |
 | ADR-0005 | Attribution and Credits placement | Accepted |

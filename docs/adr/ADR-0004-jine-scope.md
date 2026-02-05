@@ -1,4 +1,4 @@
-# ADR-0004: JINE Chat Scope
+# ADR-0004: JINE Chat Scope (Reference)
 Date: 2026-02-01
 Status: Accepted
 
@@ -14,3 +14,9 @@ Hybrid. Phase 1 is local-only storage for JINE messages. A server-backed model w
 
 ## Open Questions
 - None.
+
+## References
+| Topic | Location |
+|-------|----------|
+| ADR Index | docs/Strategic-Blueprint.md#4-architecture-decision-records |
+| JINE Specification | docs/Implementation-Spec.md#35-jine-messaging |

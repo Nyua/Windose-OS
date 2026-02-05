@@ -1,4 +1,4 @@
-# ADR-0001: Frontend Framework
+# ADR-0001: Frontend Framework (Reference)
 Date: 2026-02-01
 Status: Accepted
 
@@ -14,3 +14,9 @@ Use Vue 3 with Vite. Single-File Components (SFCs) are the default component for
 
 ## Open Questions
 - None.
+
+## References
+| Topic | Location |
+|-------|----------|
+| ADR Index | docs/Strategic-Blueprint.md#4-architecture-decision-records |
+| Framework Usage | docs/Implementation-Spec.md#2-core-architecture-raincandy-processor |

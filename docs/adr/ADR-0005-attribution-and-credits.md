@@ -1,4 +1,4 @@
-# ADR-0005: Attribution and Credits
+# ADR-0005: Attribution and Credits (Reference)
 Date: 2026-02-01
 Status: Accepted
 
@@ -12,3 +12,10 @@ Add a Credits page inside the Settings menu. The page will list rights holders, 
 - Requires a Settings/Control Panel entry point and a Credits view in Phase 1.
 - Credits text must be explicit and visible to users.
 - Attribution copy should be reviewed for accuracy before launch.
+
+## References
+| Topic | Location |
+|-------|----------|
+| ADR Index | docs/Strategic-Blueprint.md#4-architecture-decision-records |
+| Legal and Attribution | docs/Strategic-Blueprint.md#3-legal-and-attribution-user-provided |
+| Control Panel Spec | docs/Implementation-Spec.md#38-control-panel-settings |

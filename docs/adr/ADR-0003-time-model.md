@@ -1,4 +1,4 @@
-# ADR-0003: Time Model
+# ADR-0003: Time Model (Reference)
 Date: 2026-02-01
 Status: Accepted
 
@@ -14,3 +14,10 @@ Use the system clock for both TimeSlot and Day. The taskbar "DAY <n>" displays t
 
 ## Open Questions
 - None.
+
+## References
+| Topic | Location |
+|-------|----------|
+| ADR Index | docs/Strategic-Blueprint.md#4-architecture-decision-records |
+| TimeSlot Boundaries | docs/Implementation-Spec.md#21-state-management |
+| Time-of-Day Rendering | docs/Implementation-Spec.md#22-time-of-day-rendering |

@@ -1,16 +1,19 @@
 <template>
   <div class="webcam">
     <img class="background" :src="background" alt="" aria-hidden="true" />
-    <img class="sprite" :src="currentSprite" alt="Ame-chan webcam" />
+    <img class="sprite" :src="displaySprite" alt="Ame-chan webcam" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-const props = defineProps<{ seed: number }>();
+const props = defineProps<{ seed: number; madPhase?: 'idle' | 'hover' | 'release' }>();
 
 const background = '/webcam-background/webcam-background.webp';
+const madHoldSprite = '/webcam/webcam_mad_hold.png';
+const madReleaseSprite = '/webcam/webcam_mad_release.png';
+
 const sprites = [
   '/webcam/webcam_Ame-chan-crying.webp',
   '/webcam/webcam_Amechancrazysmoke.webp',
@@ -36,6 +39,12 @@ const sprites = [
 ];
 
 const currentSprite = ref(sprites[0]);
+
+const displaySprite = computed(() => {
+  if (props.madPhase === 'hover') return madHoldSprite;
+  if (props.madPhase === 'release') return madReleaseSprite;
+  return currentSprite.value;
+});
 
 function pickSprite() {
   const idx = Math.floor(Math.random() * sprites.length);

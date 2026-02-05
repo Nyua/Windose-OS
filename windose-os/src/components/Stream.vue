@@ -1,7 +1,9 @@
 <template>
   <div class="stream-video">
+    <div v-if="locked" class="placeholder">Streaming is only available at Night</div>
+    <div v-else-if="!embedSrc" class="placeholder">Set Stream Video URL in Control Panel</div>
     <iframe
-      v-if="embedSrc"
+      v-else
       ref="iframeRef"
       class="video"
       :src="embedSrc"
@@ -11,16 +13,22 @@
       allowfullscreen
       @load="onIframeLoad"
     ></iframe>
-    <div v-else class="placeholder">Set Stream Video URL in Control Panel</div>
+    <div v-if="loadState === 'loading'" class="overlay">Loading...</div>
+    <div v-else-if="loadState === 'error'" class="overlay error">
+      <div>Content blocked by browser.</div>
+      <a v-if="cleanedSrc" :href="cleanedSrc" target="_blank" rel="noopener">Open externally</a>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
-const props = defineProps<{ src: string; isMinimized?: boolean; isFocused?: boolean; isOpen?: boolean }>();
+const props = defineProps<{ src: string; isMinimized?: boolean; isFocused?: boolean; isOpen?: boolean; locked?: boolean }>();
 
 const iframeRef = ref<HTMLIFrameElement | null>(null);
+const loadState = ref<'idle' | 'loading' | 'ready' | 'error'>('idle');
+let loadTimer: number | null = null;
 
 function parseStart(value: string | null) {
   if (!value) return 0;
@@ -87,6 +95,23 @@ const embedSrc = computed(() => {
   return `https://www.youtube.com/embed/${youtubeId.value}?${params.toString()}`;
 });
 
+function clearLoadTimer() {
+  if (loadTimer !== null) {
+    window.clearTimeout(loadTimer);
+    loadTimer = null;
+  }
+}
+
+function startLoadTimer() {
+  clearLoadTimer();
+  loadState.value = 'loading';
+  loadTimer = window.setTimeout(() => {
+    if (loadState.value === 'loading') {
+      loadState.value = 'error';
+    }
+  }, 4000);
+}
+
 function sendCommand(func: 'playVideo' | 'pauseVideo' | 'stopVideo') {
   if (!isYouTube.value) return;
   const target = iframeRef.value?.contentWindow;
@@ -95,7 +120,9 @@ function sendCommand(func: 'playVideo' | 'pauseVideo' | 'stopVideo') {
 }
 
 function onIframeLoad() {
-  if (props.isMinimized) return;
+  clearLoadTimer();
+  loadState.value = 'ready';
+  if (props.isMinimized || props.locked) return;
   sendCommand('playVideo');
 }
 
@@ -124,6 +151,18 @@ watch(
 );
 
 watch(
+  () => props.locked,
+  (locked) => {
+    if (!isYouTube.value) return;
+    if (locked) {
+      sendCommand('pauseVideo');
+    } else if (!props.isMinimized && props.isFocused) {
+      sendCommand('playVideo');
+    }
+  }
+);
+
+watch(
   () => embedSrc.value,
   () => {
     if (!isYouTube.value) return;
@@ -133,11 +172,25 @@ watch(
   }
 );
 
+watch(
+  [() => embedSrc.value, () => props.locked],
+  ([src, locked]) => {
+    if (!src || locked) {
+      clearLoadTimer();
+      loadState.value = 'idle';
+      return;
+    }
+    startLoadTimer();
+  },
+  { immediate: true }
+);
+
 onMounted(() => {
-  if (!props.isMinimized) sendCommand('playVideo');
+  if (!props.isMinimized && !props.locked) sendCommand('playVideo');
 });
 
 onBeforeUnmount(() => {
+  clearLoadTimer();
   sendCommand('stopVideo');
 });
 </script>
@@ -147,13 +200,13 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #000;
+  background: #fff;
 }
 .video {
   width: 100%;
   height: 100%;
   border: none;
-  background: #000;
+  background: #fff;
 }
 .placeholder {
   position: absolute;
@@ -165,4 +218,27 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: #d0d0d0;
 }
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: #666;
+  background: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  padding: 10px;
+}
+.overlay.error {
+  color: #444;
+}
+.overlay a {
+  color: #5a4bb7;
+  text-decoration: none;
+}
 </style>
+

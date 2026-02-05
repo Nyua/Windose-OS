@@ -8,13 +8,16 @@
       :transitionMs="minimizeMs"
       :transitionEasing="transitionEasing"
       :taskbarHeight="taskbarHeight"
-      :viewportScale="viewportScale"
+      :viewportScale="props.viewportScale"
       @focus="focusWindow"
       @drag="moveWindow"
+      @dragStart="onWindowDragStart"
       @resize="resizeWindow"
       @minimize="minimizeWindow"
       @close="closeWindow"
       @toggleFullscreen="toggleFullscreen"
+      @closeHover="closeHover"
+      @closeHoverEnd="closeHoverEnd"
     >
       <ControlPanel
         v-if="win.appType === 'controlpanel'"
@@ -22,7 +25,7 @@
         :saveError="saveError"
         @update="updateSetting"
       />
-      <Webcam v-else-if="win.appType === 'webcam'" :seed="webcamSeed" />
+      <Webcam v-else-if="win.appType === 'webcam'" :seed="webcamSeed" :madPhase="props.webcamMadPhase" />
       <Jine
         v-else-if="win.appType === 'jine'"
         :messages="props.jineMessages"
@@ -30,10 +33,9 @@
         @sticker="sendJineSticker"
         @markRead="markJineRead"
       />
-      <Stream v-else-if="win.appType === 'stream'" :src="streamVideoUrl" :isMinimized="win.isMinimized" :isFocused="win.isFocused" :isOpen="win.isOpen" />
-      <div v-else-if="win.appType === 'tweeter'" class="placeholder">
-        <iframe class="iframe" src="https://x.com/ProbablyLaced"></iframe>
-      </div>
+      <Stream v-else-if="win.appType === 'stream'" :src="streamVideoUrl" :isMinimized="win.isMinimized" :isFocused="win.isFocused" :isOpen="win.isOpen" :locked="streamLocked" />
+      <Tweeter v-else-if="win.appType === 'tweeter'" :src="tweeterUrl" />
+      <TaskManager v-else-if="win.appType === 'task'" :windows="windows" />
       <div v-else-if="win.appType === 'goout'" class="goout">GO OUTSIDE</div>
       <div v-else class="placeholder">{{ win.title }}</div>
     </WindowFrame>
@@ -76,19 +78,24 @@ import ControlPanel from './ControlPanel.vue';
 import Webcam from './Webcam.vue';
 import Jine from './Jine.vue';
 import Stream from './Stream.vue';
-import type { WindowState, WindowAppType, SettingsSchema, SettingValue } from '../types';
+import Tweeter from './Tweeter.vue';
+import TaskManager from './TaskManager.vue';
+import type { WindowState, WindowAppType, SettingsSchema, SettingValue, TimeSlot } from '../types';
 import type { JineMessage } from '../jine';
 
-const props = defineProps<{ windows: WindowState[]; settings: SettingsSchema; saveError: string | null; webcamSeed: number; viewportWidth: number; viewportHeight: number; viewportScale: number; jineMessages: JineMessage[] }>();
+const props = defineProps<{ windows: WindowState[]; settings: SettingsSchema; saveError: string | null; webcamSeed: number; webcamMadPhase: 'idle' | 'hover' | 'release'; viewportWidth: number; viewportHeight: number; viewportScale: number; timeSlot: TimeSlot; jineMessages: JineMessage[] }>();
 const emit = defineEmits<{
   (e: 'open', app: WindowAppType): void;
   (e: 'focus', id: string): void;
   (e: 'move', id: string, x: number, y: number): void;
+  (e: 'dragStart', id: string): void;
   (e: 'resize', id: string, x: number, y: number, w: number, h: number): void;
   (e: 'minimize', id: string): void;
   (e: 'close', id: string): void;
   (e: 'toggleFullscreen', id: string): void;
   (e: 'updateSetting', key: string, value: SettingValue): void;
+  (e: 'closeHover', id: string): void;
+  (e: 'closeHoverEnd', id: string): void;
   (e: 'iconHover', payload: { id: string; hovering: boolean; x: number; y: number; width: number; height: number }): void;
   (e: 'jineSend', body: string): void;
   (e: 'jineSticker', label: string): void;
@@ -100,6 +107,8 @@ const minimizeMs = computed(() => Number(props.settings.minimizeAnimationMs ?? 1
 const transitionEasing = computed(() => String(props.settings.windowTransitionEasing ?? 'ease-out'));
 const taskbarHeight = computed(() => Number(props.settings.taskbarHeight ?? 50));
 const streamVideoUrl = computed(() => String(props.settings.streamVideoUrl ?? ''));
+const streamLocked = computed(() => props.timeSlot !== 'NIGHT');
+const tweeterUrl = 'https://x.com/ProbablyLaced';
 
 const iconSnapEnabled = computed(() => Boolean(props.settings.iconSnapEnabled));
 const iconGridX = computed(() => Number(props.settings.iconGridX ?? 112));
@@ -138,11 +147,14 @@ function openApp(id: string) {
 }
 
 function focusWindow(id: string) { emit('focus', id); }
+function onWindowDragStart(id: string) { emit('dragStart', id); }
 function moveWindow(id: string, x: number, y: number) { emit('move', id, x, y); }
 function resizeWindow(id: string, x: number, y: number, w: number, h: number) { emit('resize', id, x, y, w, h); }
 function minimizeWindow(id: string) { emit('minimize', id); }
 function closeWindow(id: string) { emit('close', id); }
 function toggleFullscreen(id: string) { emit('toggleFullscreen', id); }
+function closeHover(id: string) { emit('closeHover', id); }
+function closeHoverEnd(id: string) { emit('closeHoverEnd', id); }
 function updateSetting(key: string, value: SettingValue) { emit('updateSetting', key, value); }
 function onIconHover(payload: { id: string; hovering: boolean; x: number; y: number; width: number; height: number }) { emit('iconHover', payload); }
 function sendJine(body: string) { emit('jineSend', body); }
@@ -155,16 +167,12 @@ function markJineRead() { emit('jineRead'); }
   position: relative;
   width: 100%;
   height: 100%;
+  background: url('/background/bg.png') no-repeat center / cover;
   overflow: hidden;
 }
 .placeholder {
   font-family: var(--font-ui);
   font-size: 14px;
-}
-.iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
 }
 .goout {
   font-family: var(--font-ui);
@@ -177,3 +185,4 @@ function markJineRead() { emit('jineRead'); }
   height: 100%;
 }
 </style>
+

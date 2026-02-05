@@ -31,6 +31,16 @@ html, body, #app {
   background: #000;
 }
 
+body.dragging,
+body.dragging * {
+  user-select: none !important;
+}
+
+body.dragging iframe {
+  pointer-events: none !important;
+}
+
+
 @font-face {
   font-family: 'PixelMplus10';
   src: url('/fonts/PixelMplus10.ttf') format('truetype');
@@ -48,3 +58,6 @@ html, body, #app {
   src: url('/fonts/DinkieBitmap.ttf') format('truetype');
   font-display: swap;
 }
+
+
+

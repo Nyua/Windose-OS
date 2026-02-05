@@ -39,6 +39,8 @@ const props = defineProps<{
   doubleClickMs: number;
   viewportWidth: number;
   viewportHeight: number;
+  viewportScale: number;
+
   notifications?: boolean;
 }>();
 
@@ -60,6 +62,11 @@ let startY = 0;
 let startPosX = 0;
 let startPosY = 0;
 
+function setGlobalDragLock(active: boolean) {
+  if (typeof document === 'undefined') return;
+  document.body.classList.toggle('dragging', active);
+}
+
 function onClick() {
   if (clickTimer) window.clearTimeout(clickTimer);
   clickCount.value += 1;
@@ -78,6 +85,8 @@ function onClick() {
 
 function onPointerDown(e: PointerEvent) {
   dragging = true;
+  setGlobalDragLock(true);
+  e.preventDefault();
   startX = e.clientX;
   startY = e.clientY;
   startPosX = pos.value.x;
@@ -108,6 +117,7 @@ function onPointerMove(e: PointerEvent) {
 
 function onPointerUp() {
   dragging = false;
+  setGlobalDragLock(false);
   window.removeEventListener('pointermove', onPointerMove);
   window.removeEventListener('pointerup', onPointerUp);
 
@@ -154,6 +164,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('click', onClickAway);
   window.removeEventListener('pointermove', onPointerMove);
   window.removeEventListener('pointerup', onPointerUp);
+  setGlobalDragLock(false);
 });
 </script>
 
@@ -164,6 +175,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   padding: 8px;
+  padding-left: 1rem;
   user-select: none;
 }
 .desktop-icon.selected {
@@ -193,3 +205,5 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 </style>
+
+

@@ -10,20 +10,20 @@
       <div class="buttons">
         <button class="btn minimize" @click.stop="onMinimize" aria-label="Minimize">-</button>
         <button class="btn fullscreen" @click.stop="onToggleFullscreen" aria-label="Fullscreen">=</button>
-        <button class="btn close" @click.stop="onClose" aria-label="Close">x</button>
+        <button class="btn close" @pointerenter.stop="onCloseHover" @pointerleave.stop="onCloseHoverEnd" @click.stop="onClose" aria-label="Close">x</button>
       </div>
     </div>
     <div class="content">
       <slot />
     </div>
-    <div v-if="resizable" class="resizer tl" @pointerdown.stop="startResize('tl', $event)"></div>
-    <div v-if="resizable" class="resizer tr" @pointerdown.stop="startResize('tr', $event)"></div>
-    <div v-if="resizable" class="resizer bl" @pointerdown.stop="startResize('bl', $event)"></div>
-    <div v-if="resizable" class="resizer br" @pointerdown.stop="startResize('br', $event)"></div>
-    <div v-if="resizable" class="resizer top" @pointerdown.stop="startResize('top', $event)"></div>
-    <div v-if="resizable" class="resizer right" @pointerdown.stop="startResize('right', $event)"></div>
-    <div v-if="resizable" class="resizer bottom" @pointerdown.stop="startResize('bottom', $event)"></div>
-    <div v-if="resizable" class="resizer left" @pointerdown.stop="startResize('left', $event)"></div>
+    <div v-if="resizable" class="resize-edge top" @pointerdown.stop="startResize('top', $event)"></div>
+    <div v-if="resizable" class="resize-edge right" @pointerdown.stop="startResize('right', $event)"></div>
+    <div v-if="resizable" class="resize-edge bottom" @pointerdown.stop="startResize('bottom', $event)"></div>
+    <div v-if="resizable" class="resize-edge left" @pointerdown.stop="startResize('left', $event)"></div>
+    <div v-if="resizable" class="resize-corner tl" @pointerdown.stop="startResize('tl', $event)"></div>
+    <div v-if="resizable" class="resize-corner tr" @pointerdown.stop="startResize('tr', $event)"></div>
+    <div v-if="resizable" class="resize-corner bl" @pointerdown.stop="startResize('bl', $event)"></div>
+    <div v-if="resizable" class="resize-corner br" @pointerdown.stop="startResize('br', $event)"></div>
   </div>
 </template>
 
@@ -50,16 +50,25 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'focus', id: string): void;
+  (e: 'dragStart', id: string): void;
   (e: 'drag', id: string, x: number, y: number): void;
   (e: 'resize', id: string, x: number, y: number, w: number, h: number): void;
   (e: 'minimize', id: string): void;
   (e: 'close', id: string): void;
   (e: 'toggleFullscreen', id: string): void;
+  (e: 'closeHover', id: string): void;
+  (e: 'closeHoverEnd', id: string): void;
 }>();
 
 const dragging = ref(false);
 const resizing = ref<null | string>(null);
 const start = ref({ x: 0, y: 0, w: 0, h: 0, px: 0, py: 0 });
+
+function setGlobalDragLock(active: boolean) {
+  if (typeof document === 'undefined') return;
+  document.body.classList.toggle('dragging', active);
+}
+
 
 const windowStyle = computed(() => {
   const scale = props.isMinimized ? 0.1 : 1;
@@ -70,7 +79,9 @@ const windowStyle = computed(() => {
     zIndex: props.zIndex,
     opacity: props.isMinimized ? 0 : 1,
     pointerEvents: props.isMinimized ? 'none' : 'auto',
-    transition: `transform ${props.transitionMs}ms ${props.transitionEasing}, width ${props.transitionMs}ms ${props.transitionEasing}, height ${props.transitionMs}ms ${props.transitionEasing}, opacity ${props.transitionMs}ms ${props.transitionEasing}`,
+    transition: resizing.value
+      ? 'none'
+      : `transform ${props.transitionMs}ms ${props.transitionEasing}, width ${props.transitionMs}ms ${props.transitionEasing}, height ${props.transitionMs}ms ${props.transitionEasing}, opacity ${props.transitionMs}ms ${props.transitionEasing}`,
   } as Record<string, string | number>;
   return base;
 });
@@ -81,7 +92,11 @@ function onFocus() {
 
 function startDrag(e: PointerEvent) {
   if (props.isFullscreen) return;
+  emit('focus', props.id);
+  emit('dragStart', props.id);
   dragging.value = true;
+  setGlobalDragLock(true);
+  e.preventDefault();
   start.value = { x: props.x, y: props.y, w: props.width, h: props.height, px: e.clientX, py: e.clientY };
   window.addEventListener('pointermove', onDrag);
   window.addEventListener('pointerup', endDrag);
@@ -97,13 +112,17 @@ function onDrag(e: PointerEvent) {
 
 function endDrag() {
   dragging.value = false;
+  setGlobalDragLock(false);
   window.removeEventListener('pointermove', onDrag);
   window.removeEventListener('pointerup', endDrag);
 }
 
 function startResize(edge: string, e: PointerEvent) {
   if (!props.resizable || props.isFullscreen) return;
+  emit('focus', props.id);
   resizing.value = edge;
+  setGlobalDragLock(true);
+  e.preventDefault();
   start.value = { x: props.x, y: props.y, w: props.width, h: props.height, px: e.clientX, py: e.clientY };
   window.addEventListener('pointermove', onResize);
   window.addEventListener('pointerup', endResize);
@@ -120,10 +139,15 @@ function onResize(e: PointerEvent) {
   let h = start.value.h;
   const edge = resizing.value;
 
-  if (edge.includes('right')) w = start.value.w + dx;
-  if (edge.includes('left')) { w = start.value.w - dx; x = start.value.x + dx; }
-  if (edge.includes('bottom')) h = start.value.h + dy;
-  if (edge.includes('top')) { h = start.value.h - dy; y = start.value.y + dy; }
+  const leftEdge = edge.includes('left') || edge === 'tl' || edge === 'bl';
+  const rightEdge = edge.includes('right') || edge === 'tr' || edge === 'br';
+  const topEdge = edge.includes('top') || edge === 'tl' || edge === 'tr';
+  const bottomEdge = edge.includes('bottom') || edge === 'bl' || edge === 'br';
+
+  if (rightEdge) w = start.value.w + dx;
+  if (leftEdge) { w = start.value.w - dx; x = start.value.x + dx; }
+  if (bottomEdge) h = start.value.h + dy;
+  if (topEdge) { h = start.value.h - dy; y = start.value.y + dy; }
 
   const minW = 200;
   const minH = 120;
@@ -135,6 +159,7 @@ function onResize(e: PointerEvent) {
 
 function endResize() {
   resizing.value = null;
+  setGlobalDragLock(false);
   window.removeEventListener('pointermove', onResize);
   window.removeEventListener('pointerup', endResize);
 }
@@ -147,6 +172,14 @@ function onClose() {
   emit('close', props.id);
 }
 
+function onCloseHover() {
+  emit('closeHover', props.id);
+}
+
+function onCloseHoverEnd() {
+  emit('closeHoverEnd', props.id);
+}
+
 function onToggleFullscreen() {
   emit('toggleFullscreen', props.id);
 }
@@ -156,6 +189,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('pointerup', endDrag);
   window.removeEventListener('pointermove', onResize);
   window.removeEventListener('pointerup', endResize);
+  setGlobalDragLock(false);
 });
 </script>
 
@@ -211,14 +245,17 @@ onBeforeUnmount(() => {
   height: calc(100% - 28px);
   overflow: hidden;
 }
-.resizer { position: absolute; width: 8px; height: 8px; background: transparent; }
-.resizer.tl { top: -4px; left: -4px; cursor: nwse-resize; }
-.resizer.tr { top: -4px; right: -4px; cursor: nesw-resize; }
-.resizer.bl { bottom: -4px; left: -4px; cursor: nesw-resize; }
-.resizer.br { bottom: -4px; right: -4px; cursor: nwse-resize; }
-.resizer.top { top: -4px; left: 10px; right: 10px; height: 8px; cursor: ns-resize; }
-.resizer.bottom { bottom: -4px; left: 10px; right: 10px; height: 8px; cursor: ns-resize; }
-.resizer.left { left: -4px; top: 10px; bottom: 10px; width: 8px; cursor: ew-resize; }
-.resizer.right { right: -4px; top: 10px; bottom: 10px; width: 8px; cursor: ew-resize; }
+.resize-edge { position: absolute; background: transparent; z-index: 4; touch-action: none; }
+.resize-corner { position: absolute; background: transparent; z-index: 5; touch-action: none; }
+.resize-edge.top { top: -6px; left: 12px; right: 12px; height: 12px; cursor: ns-resize; }
+.resize-edge.bottom { bottom: -6px; left: 12px; right: 12px; height: 12px; cursor: ns-resize; }
+.resize-edge.left { left: -6px; top: 12px; bottom: 12px; width: 12px; cursor: ew-resize; }
+.resize-edge.right { right: -6px; top: 12px; bottom: 12px; width: 12px; cursor: ew-resize; }
+.resize-corner { width: 18px; height: 18px; }
+.resize-corner.tl { top: -9px; left: -9px; cursor: nwse-resize; }
+.resize-corner.tr { top: -9px; right: -9px; cursor: nesw-resize; }
+.resize-corner.bl { bottom: -9px; left: -9px; cursor: nesw-resize; }
+.resize-corner.br { bottom: -9px; right: -9px; cursor: nwse-resize; }
 </style>
+
 
