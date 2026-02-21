@@ -1,10 +1,10 @@
 :root {
-  --window-bg: #f0f0f0;
-  --title-active: #bd64f1;
-  --title-inactive: #a5b0ce;
-  --bevel-highlight: #ffffff;
-  --bevel-shadow: #808080;
-  --font-base: #2b2b2b;
+  --window-bg: #d8cfdf;
+  --title-active: #dac6e7;
+  --title-inactive: #d3c0dd;
+  --bevel-highlight: #9edff7;
+  --bevel-shadow: #3f2be0;
+  --font-base: #402fd6;
   --font-ui: 'PixelMplus10', monospace;
   --font-chat: 'PixelMplus12', monospace;
   --font-sys: 'DinkieBitmap', monospace;

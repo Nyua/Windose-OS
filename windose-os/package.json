@@ -5,19 +5,33 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "remote-browser": "node scripts/remote-browser-server.mjs",
+    "snapshot:update": "node scripts/update-site-snapshots.mjs --config snapshot-config/sites.config.json",
+    "deploy:remote-browser": "gcloud builds submit . --project windose-cee16 --tag gcr.io/windose-cee16/windose-remote-browser --file Dockerfile.remote-browser && gcloud run deploy windose-remote-browser --region us-central1 --project windose-cee16 --allow-unauthenticated --port 8080 --image gcr.io/windose-cee16/windose-remote-browser",
+    "yt-audio-proxy": "npm --prefix services/yt-audio-proxy start",
+    "deploy:yt-audio-proxy": "gcloud builds submit services/yt-audio-proxy --project windose-cee16 --tag gcr.io/windose-cee16/windose-yt-audio-proxy && gcloud run deploy windose-yt-audio-proxy --region us-central1 --project windose-cee16 --allow-unauthenticated --port 8080 --image gcr.io/windose-cee16/windose-yt-audio-proxy",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "deploy:hosting": "npm run build && npx firebase-tools deploy --only hosting",
+    "deploy:preview": "npm run build && npx firebase-tools hosting:channel:deploy preview"
   },
   "dependencies": {
+    "firebase": "^12.9.0",
     "pinia": "^3.0.4",
+    "three": "^0.181.1",
     "vue": "^3.5.24"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.8.1",
+    "jsdom": "^27.2.0",
+    "playwright": "^1.57.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
+    "vitest": "^4.0.7",
     "vue-tsc": "^3.1.4"
   }
 }

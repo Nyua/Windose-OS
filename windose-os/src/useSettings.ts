@@ -13,22 +13,26 @@ export function loadSettings(): SettingsSchema {
   }
 }
 
-export function useSettings() {
-  const settings = ref<SettingsSchema>(loadSettings());
-  const saveError = ref<string | null>(null);
+const settings = ref<SettingsSchema>(loadSettings());
+const saveError = ref<string | null>(null);
+let watchBound = false;
 
-  watch(
-    settings,
-    (val) => {
-      try {
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(val));
-        saveError.value = null;
-      } catch {
-        saveError.value = 'Settings could not be saved.';
-      }
-    },
-    { deep: true }
-  );
+export function useSettings() {
+  if (!watchBound) {
+    watch(
+      settings,
+      (val) => {
+        try {
+          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(val));
+          saveError.value = null;
+        } catch {
+          saveError.value = 'Settings could not be saved.';
+        }
+      },
+      { deep: true }
+    );
+    watchBound = true;
+  }
 
   return { settings, saveError };
 }

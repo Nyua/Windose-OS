@@ -5,9 +5,18 @@ export type WindowAppType =
   | 'jine'
   | 'stream'
   | 'tweeter'
+  | 'hangout'
   | 'goout'
   | 'internet'
+  | 'medication'
+  | 'medication_depaz'
+  | 'medication_dyslem'
+  | 'medication_embian'
+  | 'medication_magic_smoke'
+  | 'sleep'
+  | 'trash'
   | 'controlpanel'
+  | 'credits'
   | 'secret'
   | 'task';
 

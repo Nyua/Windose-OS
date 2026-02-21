@@ -1,0 +1,7 @@
+
+> windose-os@0.0.0 remote-browser
+> node scripts/remote-browser-server.mjs
+
+[remote-browser] listening on http://0.0.0.0:8791
+
+c:\Dev\Windose-OS\windose-os>

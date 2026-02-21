@@ -1,0 +1,17 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ferrofluid Control icon">
+  <rect x="4.5" y="4.5" width="55" height="55" rx="14" fill="#f2f4f7" stroke="#c9cfd7"/>
+  <defs>
+    <clipPath id="ferro-bump-core">
+      <circle cx="32" cy="32" r="15.2"/>
+    </clipPath>
+  </defs>
+  <circle cx="32" cy="32" r="15.2" fill="#f8fafc" stroke="#8e95a0" stroke-width="2.2"/>
+  <g clip-path="url(#ferro-bump-core)">
+    <rect x="16.8" y="16.8" width="15.2" height="30.4" fill="#ffffff"/>
+    <rect x="32" y="16.8" width="15.2" height="30.4" fill="#b9c0cb"/>
+  </g>
+  <circle cx="20.5" cy="32" r="3.2" fill="#f7f9fb" stroke="#9198a4" stroke-width="1.2"/>
+  <circle cx="43.5" cy="32" r="3.2" fill="#c3cad4" stroke="#8a919d" stroke-width="1.2"/>
+  <circle cx="32" cy="20.5" r="3.2" fill="#eff2f7" stroke="#9198a4" stroke-width="1.2"/>
+  <circle cx="32" cy="43.5" r="3.2" fill="#d2d8e1" stroke="#8a919d" stroke-width="1.2"/>
+</svg>

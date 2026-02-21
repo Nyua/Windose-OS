@@ -51,8 +51,29 @@ const emit = defineEmits<{
   (e: 'hover', payload: { id: string; hovering: boolean; x: number; y: number; width: number; height: number }): void;
 }>();
 
+function clampPosition(nextX: number, nextY: number) {
+  if (!props.clampEnabled) {
+    return { x: nextX, y: nextY };
+  }
+
+  const viewportWidth = props.viewportWidth;
+  const viewportHeight = props.viewportHeight;
+  const iconWidth = Math.max(props.size * 1.2, props.size) + 24;
+  const iconHeight = props.size + 32;
+
+  const minX = props.clampLeft;
+  const minY = props.clampTop;
+  const maxX = Math.max(minX, viewportWidth - iconWidth - props.clampRightOffset);
+  const maxY = Math.max(minY, viewportHeight - props.taskbarHeight - iconHeight - props.clampBottomOffset);
+
+  return {
+    x: Math.min(maxX, Math.max(minX, nextX)),
+    y: Math.min(maxY, Math.max(minY, nextY)),
+  };
+}
+
 const iconRef = ref<HTMLDivElement | null>(null);
-const pos = ref({ x: props.defaultX, y: props.defaultY });
+const pos = ref(clampPosition(props.defaultX, props.defaultY));
 const isSelected = ref(false);
 const clickCount = ref(0);
 let clickTimer: number | null = null;
@@ -128,24 +149,9 @@ function onPointerUp() {
     x = Math.round(x / props.gridX) * props.gridX + props.gridOffset;
     y = Math.round(y / props.gridY) * props.gridY + props.gridOffset;
   }
-
-  if (props.clampEnabled) {
-    const width = props.viewportWidth;
-    const height = props.viewportHeight;
-    if (y > height - props.taskbarHeight - props.size) {
-      y = height - props.size * 2 - props.clampBottomOffset;
-    } else if (y < props.size) {
-      y = props.clampTop;
-    }
-    if (x > width - props.size) {
-      x = width - props.size * 2 - props.clampRightOffset;
-    } else if (x < props.size) {
-      x = props.clampLeft;
-    }
-  }
-
-  pos.value = { x, y };
-  emit('position', props.id, x, y);
+  const clamped = clampPosition(x, y);
+  pos.value = clamped;
+  emit('position', props.id, clamped.x, clamped.y);
 }
 
 function clearSelection() {

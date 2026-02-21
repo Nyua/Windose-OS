@@ -1,5 +1,5 @@
 # Windose 20 - Strategic Blueprint (Strategic)
-Audience: Product, design, engineering, AI coding agents
+Audience: Product, design, engineering, product, design, and engineering teams
 
 ## 1. Project Overview
 Recreate the "Windose 20" operating system from Needy Streamer Overload as a browser-based "Playable Operating System" (POS). The app is a resource-management simulation wrapped in a fake desktop UI with a "Yami-Kawaii" (sick-cute) aesthetic.

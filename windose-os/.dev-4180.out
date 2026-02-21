@@ -1,0 +1,19 @@
+
+> windose-os@0.0.0 dev
+> vite --host 127.0.0.1 --port 4180
+
+
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m313[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m4180[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m2:04:36 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m
+[2m2:04:52 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m
+[2m2:05:03 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m
+[2m2:05:14 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m
+[2m2:05:27 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m
+[2m2:05:40 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m
+[2m2:05:49 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m
+[2m2:19:53 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m
+[2m2:31:59 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m
+[2m2:32:55 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/ames-corner/main.js[22m

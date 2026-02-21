@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Cartoon heart">
+  <defs>
+    <linearGradient id="heartFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7ea8" />
+      <stop offset="48%" stop-color="#ff4f87" />
+      <stop offset="100%" stop-color="#ca2869" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M128 228C124 224 57 167 34 122C18 91 26 52 58 40C84 31 109 43 128 66C147 43 172 31 198 40C230 52 238 91 222 122C199 167 132 224 128 228Z"
+    fill="url(#heartFill)"
+    stroke="#901545"
+    stroke-width="8"
+    stroke-linejoin="round"
+  />
+  <ellipse cx="95" cy="92" rx="22" ry="15" fill="#ffd3e2" opacity="0.6" />
+  <ellipse cx="80" cy="108" rx="10" ry="7" fill="#ffe7ef" opacity="0.62" />
+</svg>

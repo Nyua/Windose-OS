@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY scripts ./scripts
+
+ENV NODE_ENV=production
+ENV REMOTE_BROWSER_HOST=0.0.0.0
+ENV REMOTE_BROWSER_PORT=8080
+ENV REMOTE_BROWSER_MAX_SESSIONS=8
+ENV REMOTE_BROWSER_SESSION_TTL_MS=480000
+ENV REMOTE_BROWSER_NAV_TIMEOUT_MS=15000
+ENV REMOTE_BROWSER_ALLOWED_HOSTS=x.com,www.youtube.com,youtube.com,steamcommunity.com,www.last.fm,last.fm,open.spotify.com
+
+EXPOSE 8080
+
+CMD ["node", "scripts/remote-browser-server.mjs"]

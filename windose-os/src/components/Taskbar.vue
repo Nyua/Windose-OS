@@ -6,7 +6,7 @@
       @click.stop="$emit('toggleStart')"
       aria-label="Start"
     >
-      Start
+      <span class="start-label" aria-hidden="true">START</span>
     </button>
     <div class="quick">
       <button class="quick-btn tweeter" @click="openApp('tweeter')" aria-label="Tweeter">Tweeter</button>
@@ -62,7 +62,7 @@ function openApp(app: WindowAppType) {
 
 const tabsRef = ref<HTMLDivElement | null>(null);
 const tabsWidth = ref(0);
-const tabGapPx = 10;
+const tabGapPx = 4;
 const tabMaxWidth = 220;
 
 const tabWidth = computed(() => {
@@ -130,18 +130,32 @@ onBeforeUnmount(() => {
   border-top-color: transparent;
 }
 .start {
+  position: relative;
   width: 136px;
   height: 32px;
   background: url('/start-menu/start_button.png') no-repeat;
   background-size: 100% 100%;
   border: none;
   padding: 0;
-  text-indent: -9999px;
-  overflow: hidden;
   cursor: pointer;
 }
 .start.pressed {
   background-image: url('/start-menu/start_pressed.png');
+}
+.start-label {
+  position: absolute;
+  left: 72px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.8px;
+  color: #22133a;
+  text-shadow: 1px 1px 0 #f4e9ff;
+  pointer-events: none;
+}
+.start.pressed .start-label {
+  transform: translateY(calc(-50% + 1px));
 }
 .quick {
   display: flex;
@@ -180,43 +194,62 @@ onBeforeUnmount(() => {
 .tabs {
   flex: 1;
   display: flex;
-  gap: var(--tab-gap, 10px);
+  gap: var(--tab-gap, 4px);
   overflow-x: hidden;
   align-items: center;
   margin-left: var(--tab-offset, 0px);
+  position: relative;
 }
 .tab {
   font-family: var(--font-ui);
-  font-size: 24px;
-  padding: 2px 12px 2px 8px;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 10px 2px 8px;
   width: var(--tab-width, 220px);
   max-width: var(--tab-width, 220px);
   min-width: 0;
-  height: 35px;
+  height: 28px;
   display: inline-flex;
   flex: 0 0 var(--tab-width, 220px);
   align-items: center;
-  gap: 6px;
-  color: #4f2c7a;
-  background: rgba(240, 220, 246, var(--taskbar-alpha, 1));
-  border: 2px solid var(--bevel-shadow);
-  box-shadow: inset 0 0 0 2px var(--bevel-highlight);
+  gap: 5px;
+  color: #2f1a67;
+  background: rgba(236, 223, 245, var(--taskbar-alpha, 1));
+  border: 1px solid #8b75b1;
+  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #c7afd9;
   box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  border-radius: 0;
 }
 .tab.active {
-  border-color: var(--bevel-highlight);
-  box-shadow: inset 0 0 0 2px var(--bevel-shadow);
-  background: rgba(235, 210, 245, var(--taskbar-alpha, 1));
+  border-color: #7a61a6;
+  box-shadow: inset 1px 1px 0 #cdb7de, inset -1px -1px 0 #f8f2ff;
+  background: rgba(221, 199, 236, var(--taskbar-alpha, 1));
+}
+.tab:not(.focused) {
+  color: #6d6d6d;
+  background: rgba(227, 227, 227, var(--taskbar-alpha, 1));
+  border-color: #9c9c9c;
+  box-shadow: inset 1px 1px 0 #f5f5f5, inset -1px -1px 0 #c8c8c8;
+}
+.tab:not(.focused).active {
+  background: rgba(214, 214, 214, var(--taskbar-alpha, 1));
+  border-color: #909090;
+  box-shadow: inset 1px 1px 0 #ececec, inset -1px -1px 0 #c0c0c0;
 }
 .tab::before {
   content: '';
-  width: 10px;
-  height: 10px;
-  background: #5b3b7d;
+  width: 12px;
+  height: 12px;
+  background: #6541a2;
+  border: 1px solid #523587;
   flex-shrink: 0;
+}
+.tab:not(.focused)::before {
+  background: #a6a6a6;
+  border-color: #7f7f7f;
 }
 .tab.notify {
   animation: jineFlash 0.9s steps(2, end) infinite, jineBounce 0.9s ease-in-out infinite;

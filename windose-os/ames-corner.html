@@ -1,0 +1,68 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ame's Corner</title>
+    <link rel="stylesheet" href="/ames-corner.css" />
+  </head>
+  <body>
+    <main class="corner-shell state-bios">
+      <section class="bios-stage" aria-label="BIOS startup">
+        <div class="bios-screen">
+          <pre class="bios-log"></pre>
+          <span class="bios-cursor" aria-hidden="true">_</span>
+        </div>
+      </section>
+
+      <section id="os-loader-stage" class="os-loader-stage" aria-hidden="true">
+        <div class="os-loader-panel">
+          <canvas id="os-loader-canvas" class="os-loader-canvas" aria-hidden="true"></canvas>
+          <div id="os-loader-progress-track" class="os-loader-progress-track" aria-hidden="true">
+            <div id="os-loader-progress-fill" class="os-loader-progress-fill"></div>
+          </div>
+        </div>
+        <p id="os-loader-readout" class="os-loader-readout">Preparing shell...</p>
+      </section>
+
+      <section id="os-stage" class="os-stage" aria-hidden="true">
+        <canvas id="os-bg-visualizer" class="os-bg-visualizer" aria-hidden="true"></canvas>
+        <header class="os-topbar">
+          <div id="os-datetime" class="os-datetime">0000-00-00 00:00</div>
+        </header>
+
+        <section id="os-desktop" class="os-desktop" aria-label="Desktop"></section>
+        <section id="os-window-layer" class="os-window-layer" aria-label="Windows"></section>
+
+        <footer class="os-taskbar" aria-label="Taskbar">
+          <button id="os-start-button" class="os-start-button" type="button" aria-label="Start" aria-expanded="false" aria-controls="os-start-menu">Start</button>
+          <div id="os-taskbar-apps" class="os-taskbar-apps" aria-label="Pinned apps"></div>
+        </footer>
+
+        <section id="os-start-menu" class="os-start-menu" hidden>
+          <div class="os-start-menu-title">Applications</div>
+          <div class="os-start-menu-apps">
+            <button class="os-start-entry" data-app="recycle-bin" type="button">Recycle Bin</button>
+            <button class="os-start-entry" data-app="file-explorer" type="button">File Explorer</button>
+            <button class="os-start-entry" data-app="notes" type="button">Notes</button>
+            <button class="os-start-entry" data-app="settings" type="button">Settings</button>
+            <button class="os-start-entry" data-app="ferro-control" type="button">Ferrofluid Control</button>
+            <button class="os-start-entry" data-app="about-system" type="button">About System</button>
+          </div>
+          <div class="os-start-menu-divider"></div>
+          <div class="os-start-menu-title">Power</div>
+          <div class="os-start-menu-power">
+            <button id="os-restart-button" class="os-start-entry os-start-entry--power" type="button">Restart</button>
+            <button id="os-shutdown-button" class="os-start-entry os-start-entry--power" type="button">Shut Down</button>
+          </div>
+        </section>
+
+        <section id="os-shutdown-screen" class="os-shutdown-screen" hidden>
+          <p>System asleep.</p>
+          <button id="os-reboot-button" type="button">Reboot</button>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="/src/ames-corner/main.js"></script>
+  </body>
+</html>

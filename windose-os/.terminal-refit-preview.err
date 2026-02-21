@@ -1,0 +1,75 @@
+[2m11:35:05 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771418105857[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m11:35:05 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771418105857[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m11:35:05 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771418105858[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m11:35:05 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771418105858[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m11:35:08 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771418108217[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m11:35:09 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771418109829[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m11:35:10 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771418110483[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m11:35:11 pm[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771418111137[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:13 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423573098[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:13 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423573101[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:13 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423573102[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:13 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423573102[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:13 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423573103[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:14 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423574700[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:15 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423575354[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:15 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423575991[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:15 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423575991[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:15 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423575991[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:15 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423575991[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:16 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423576007[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:16 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423576615[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:18 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423578216[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:18 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423578869[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:19 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423579522[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m1:06:37 am[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /extract?t=1771423597222[39m
+Error: connect ECONNREFUSED 127.0.0.1:8791
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)

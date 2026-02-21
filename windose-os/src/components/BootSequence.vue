@@ -12,6 +12,9 @@
       <div v-else-if="phase === 'setup'" class="screen setup">
         <div class="setup-textbox">
           <div class="prompt">please Fullscreen your window to continue.</div>
+          <div class="prompt secondary">
+            mobile devices are not fully supported yet. the site is semi-usable on mobile right now, but not very intuitive. i'm working on it.
+          </div>
         </div>
       </div>
     </div>
@@ -23,6 +26,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 type BootMode = 'startup' | 'restart' | 'shutdown';
 type BootPhase = 'black' | 'bios' | 'bootscreen' | 'setup';
+const BOOT_SFX_GAIN = 0.5;
 
 const props = defineProps<{ mode: BootMode; blackMs?: number; biosMs?: number; fadeMs?: number }>();
 const emit = defineEmits<{ (e: 'complete'): void }>();
@@ -56,6 +60,7 @@ function stopAudio(audio: HTMLAudioElement | null) {
 
 function playAudio(audio: HTMLAudioElement | null) {
   if (!audio) return;
+  audio.volume = BOOT_SFX_GAIN;
   audio.currentTime = 0;
   const playPromise = audio.play();
   if (playPromise && typeof playPromise.catch === 'function') {
@@ -242,5 +247,9 @@ onBeforeUnmount(() => {
 }
 .prompt {
   text-transform: none;
+}
+.prompt.secondary {
+  margin-top: 8px;
+  opacity: 0.9;
 }
 </style>

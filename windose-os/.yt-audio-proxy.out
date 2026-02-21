@@ -1,0 +1,9 @@
+
+> windose-os@0.0.0 yt-audio-proxy
+> npm --prefix services/yt-audio-proxy start
+
+
+> windose-yt-audio-proxy@1.0.0 start
+> node server.mjs
+
+[yt-audio-proxy] listening on http://0.0.0.0:8792

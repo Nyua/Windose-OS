@@ -1,0 +1,110 @@
+{
+  "outputManifestPath": "public/internet/snapshots/manifest.generated.json",
+  "defaultViewport": {
+    "width": 1366,
+    "height": 860
+  },
+  "defaultWaitMs": 1800,
+  "navigationTimeoutMs": 18000,
+  "sites": [
+    {
+      "id": "tweeter",
+      "url": "https://x.com/ProbablyLaced",
+      "baseImage": "/internet/templates/tweeter/base.png",
+      "captures": [
+        {
+          "id": "avatar",
+          "selector": "[data-testid='UserAvatar-Container'] img",
+          "mode": "replace",
+          "optional": true
+        },
+        {
+          "id": "nameplate",
+          "selector": "[data-testid='UserName']",
+          "mode": "replace",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "metube",
+      "url": "https://www.youtube.com/@fentlacedcat",
+      "baseImage": "/internet/templates/metube/base.png",
+      "captures": [
+        {
+          "id": "channel_avatar",
+          "selector": "#avatar img",
+          "mode": "replace",
+          "optional": true
+        },
+        {
+          "id": "channel_meta",
+          "selector": "#meta",
+          "mode": "replace",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "gaming",
+      "url": "https://steamcommunity.com/id/foundlifeless/",
+      "baseImage": "/internet/templates/gaming/base.png",
+      "captures": [
+        {
+          "id": "profile_avatar",
+          "selector": ".playerAvatarAutoSizeInner img",
+          "mode": "replace",
+          "optional": true
+        },
+        {
+          "id": "profile_summary",
+          "selector": ".profile_summary",
+          "mode": "replace",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "lastfm",
+      "url": "https://www.last.fm/user/FoundLifeless",
+      "baseImage": "/internet/templates/lastfm/base.png",
+      "captures": [
+        {
+          "id": "profile_avatar",
+          "selector": ".header-avatar img",
+          "mode": "replace",
+          "optional": true
+        },
+        {
+          "id": "recent_tracks",
+          "selector": ".recent-tracks",
+          "mode": "replace",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "spotify",
+      "url": "https://open.spotify.com/playlist/1Cim4pZnFmNXD8N4OtO3wz?si=b75cc9f3073a473b&nd=1&dlsi=49ce9ea61601457a",
+      "baseImage": "/internet/templates/spotify/base.png",
+      "hideSelectors": [
+        "#global-nav-bar",
+        "#Desktop_LeftSidebar_Id"
+      ],
+      "captures": [
+        {
+          "id": "playlist_cover",
+          "selector": "[data-testid='entityHeader-image'] img",
+          "mode": "replace",
+          "optional": true
+        },
+        {
+          "id": "playlist_tracks",
+          "selector": "[data-testid='track-list']",
+          "mode": "replace",
+          "optional": true
+        }
+      ]
+    }
+  ]
+}

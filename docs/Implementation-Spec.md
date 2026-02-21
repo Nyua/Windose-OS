@@ -1,5 +1,5 @@
 # Windose 20 - Implementation Spec (Implementation)
-Audience: AI coding agents and engineers
+Audience: product, design, and engineering teams
 
 ## 1. Constraints and Global Rules
 
@@ -464,7 +464,7 @@ TimeSlot debug control: Control Panel provides a Default/Noon/Dusk/Night toggle 
 - CRT scanline overlay is toggleable in Settings and adjustable for intensity.
 - Sound file paths are editable in the password-protected Settings (public/sounds).
 
-## 8. Recent Fixes and Build Notes (For AI Team)
+## 8. Recent Fixes and Build Notes (For Implementation Team)
 
 ### 8.1 TypeScript Fixes (Feb 4, 2026)
 To ensure the project builds successfully, the following TS errors were resolved:

@@ -12,6 +12,7 @@
       @focus="focusWindow"
       @drag="moveWindow"
       @dragStart="onWindowDragStart"
+      @dragEnd="onWindowDragEnd"
       @resize="resizeWindow"
       @minimize="minimizeWindow"
       @close="closeWindow"
@@ -24,18 +25,33 @@
         :settings="settings"
         :saveError="saveError"
         @update="updateSetting"
+        @launchAmeCorner="launchAmeCorner"
       />
-      <Webcam v-else-if="win.appType === 'webcam'" :seed="webcamSeed" :madPhase="props.webcamMadPhase" />
+      <Credits v-else-if="win.appType === 'credits'" />
+      <Webcam
+        v-else-if="win.appType === 'webcam'"
+        :seed="webcamSeed"
+        :madPhase="props.webcamMadPhase"
+        :windowWidth="win.width"
+        :windowHeight="win.height"
+      />
       <Jine
         v-else-if="win.appType === 'jine'"
-        :messages="props.jineMessages"
-        @send="sendJine"
-        @sticker="sendJineSticker"
-        @markRead="markJineRead"
       />
       <Stream v-else-if="win.appType === 'stream'" :src="streamVideoUrl" :isMinimized="win.isMinimized" :isFocused="win.isFocused" :isOpen="win.isOpen" :locked="streamLocked" />
-      <Tweeter v-else-if="win.appType === 'tweeter'" :src="tweeterUrl" />
+      <InternetApp v-else-if="win.appType === 'tweeter'" initial-site-id="twitter" />
       <TaskManager v-else-if="win.appType === 'task'" :windows="windows" />
+      <InternetApp v-else-if="win.appType === 'internet'" />
+      <MedicineApp v-else-if="win.appType === 'medication'" @open-medication-window="openMedicationWindow" />
+      <MedicationDoseWindow v-else-if="win.appType === 'medication_depaz'" medicationType="depaz" />
+      <MedicationDoseWindow v-else-if="win.appType === 'medication_dyslem'" medicationType="dyslem" />
+      <MedicationDoseWindow v-else-if="win.appType === 'medication_embian'" medicationType="embian" />
+      <MedicationDoseWindow v-else-if="win.appType === 'medication_magic_smoke'" medicationType="magic_smoke" />
+      <SleepApp v-else-if="win.appType === 'sleep'" />
+      <TrashBin v-else-if="win.appType === 'trash'" />
+      <div v-else-if="win.appType === 'secret'" class="secret-image-app">
+        <img class="secret-image" src="/webcam/Secret.jpg" alt="Secret image" draggable="false" />
+      </div>
       <div v-else-if="win.appType === 'goout'" class="goout">GO OUTSIDE</div>
       <div v-else class="placeholder">{{ win.title }}</div>
     </WindowFrame>
@@ -75,20 +91,28 @@ import { computed } from 'vue';
 import WindowFrame from './WindowFrame.vue';
 import DesktopIcon from './DesktopIcon.vue';
 import ControlPanel from './ControlPanel.vue';
+import Credits from './Credits.vue';
 import Webcam from './Webcam.vue';
 import Jine from './Jine.vue';
 import Stream from './Stream.vue';
-import Tweeter from './Tweeter.vue';
 import TaskManager from './TaskManager.vue';
+import InternetApp from './InternetApp.vue';
+import MedicineApp from './MedicineApp.vue';
+import MedicationDoseWindow from './MedicationDoseWindow.vue';
+import SleepApp from './SleepApp.vue';
+import TrashBin from './TrashBin.vue';
+import type { MedicineType } from '../stores/medicine';
 import type { WindowState, WindowAppType, SettingsSchema, SettingValue, TimeSlot } from '../types';
-import type { JineMessage } from '../jine';
 
-const props = defineProps<{ windows: WindowState[]; settings: SettingsSchema; saveError: string | null; webcamSeed: number; webcamMadPhase: 'idle' | 'hover' | 'release'; viewportWidth: number; viewportHeight: number; viewportScale: number; timeSlot: TimeSlot; jineMessages: JineMessage[] }>();
+
+const props = defineProps<{ windows: WindowState[]; settings: SettingsSchema; saveError: string | null; webcamSeed: number; webcamMadPhase: 'idle' | 'hover' | 'release'; viewportWidth: number; viewportHeight: number; viewportScale: number; timeSlot: TimeSlot; }>();
 const emit = defineEmits<{
   (e: 'open', app: WindowAppType): void;
+  (e: 'launchAmeCorner'): void;
   (e: 'focus', id: string): void;
   (e: 'move', id: string, x: number, y: number): void;
   (e: 'dragStart', id: string): void;
+  (e: 'dragEnd', id: string): void;
   (e: 'resize', id: string, x: number, y: number, w: number, h: number): void;
   (e: 'minimize', id: string): void;
   (e: 'close', id: string): void;
@@ -97,9 +121,6 @@ const emit = defineEmits<{
   (e: 'closeHover', id: string): void;
   (e: 'closeHoverEnd', id: string): void;
   (e: 'iconHover', payload: { id: string; hovering: boolean; x: number; y: number; width: number; height: number }): void;
-  (e: 'jineSend', body: string): void;
-  (e: 'jineSticker', label: string): void;
-  (e: 'jineRead'): void;
 }>();
 
 const windowResizable = computed(() => Boolean(props.settings.windowResizable));
@@ -108,7 +129,6 @@ const transitionEasing = computed(() => String(props.settings.windowTransitionEa
 const taskbarHeight = computed(() => Number(props.settings.taskbarHeight ?? 50));
 const streamVideoUrl = computed(() => String(props.settings.streamVideoUrl ?? ''));
 const streamLocked = computed(() => props.timeSlot !== 'NIGHT');
-const tweeterUrl = 'https://x.com/ProbablyLaced';
 
 const iconSnapEnabled = computed(() => Boolean(props.settings.iconSnapEnabled));
 const iconGridX = computed(() => Number(props.settings.iconGridX ?? 112));
@@ -124,6 +144,20 @@ const iconClampTop = computed(() => Number(props.settings.iconClampTop ?? 0));
 const iconClampRightOffset = computed(() => Number(props.settings.iconClampRightOffset ?? 0));
 const iconClampBottomOffset = computed(() => Number(props.settings.iconClampBottomOffset ?? 0));
 const iconDoubleClickMs = computed(() => Number(props.settings.iconDoubleClickMs ?? 300));
+const iconFootprintWidth = computed(() => Math.max(iconSize.value * 1.2, iconSize.value) + 24);
+const iconFootprintHeight = computed(() => iconSize.value + 32);
+const trashDefaultX = computed(() =>
+  Math.max(
+    iconClampLeft.value,
+    props.viewportWidth - iconFootprintWidth.value - iconClampRightOffset.value,
+  ),
+);
+const trashDefaultY = computed(() =>
+  Math.max(
+    iconClampTop.value,
+    props.viewportHeight - iconTaskbarHeight.value - iconFootprintHeight.value - iconClampBottomOffset.value,
+  ),
+);
 
 const desktopApps = computed(() => [
   { id: 'stream', title: 'Stream', icon: '/icons/stream.png' },
@@ -132,22 +166,27 @@ const desktopApps = computed(() => [
   { id: 'medication', title: 'Medication', icon: '/icons/medication.png' },
   { id: 'internet', title: 'Internet', icon: '/icons/internet.png' },
   { id: 'goout', title: 'Go Out', icon: '/icons/goout.png' },
-  { id: 'trash', title: 'Trash Bin', icon: '/icons/trash.png' },
+  { id: 'trash', title: 'Trash Bin', icon: '/icons/trash.png', defaultX: trashDefaultX.value, defaultY: trashDefaultY.value },
   { id: 'secret', title: 'Secret.txt', icon: '/icons/secret.png', defaultX: 320, defaultY: 240 },
 ]);
 
 function openApp(id: string) {
   if (id === 'secret') emit('open', 'secret');
   if (id === 'internet') emit('open', 'internet');
+  if (id === 'hangout') emit('open', 'hangout');
   if (id === 'goout') emit('open', 'goout');
   if (id === 'stream') emit('open', 'stream');
   if (id === 'tweeter') emit('open', 'tweeter');
   if (id === 'jine') emit('open', 'jine');
   if (id === 'webcam') emit('open', 'webcam');
+  if (id === 'medication') emit('open', 'medication');
+  if (id === 'sleep') emit('open', 'sleep');
+  if (id === 'trash') emit('open', 'trash');
 }
 
 function focusWindow(id: string) { emit('focus', id); }
 function onWindowDragStart(id: string) { emit('dragStart', id); }
+function onWindowDragEnd(id: string) { emit('dragEnd', id); }
 function moveWindow(id: string, x: number, y: number) { emit('move', id, x, y); }
 function resizeWindow(id: string, x: number, y: number, w: number, h: number) { emit('resize', id, x, y, w, h); }
 function minimizeWindow(id: string) { emit('minimize', id); }
@@ -156,10 +195,17 @@ function toggleFullscreen(id: string) { emit('toggleFullscreen', id); }
 function closeHover(id: string) { emit('closeHover', id); }
 function closeHoverEnd(id: string) { emit('closeHoverEnd', id); }
 function updateSetting(key: string, value: SettingValue) { emit('updateSetting', key, value); }
+function launchAmeCorner() { emit('launchAmeCorner'); }
 function onIconHover(payload: { id: string; hovering: boolean; x: number; y: number; width: number; height: number }) { emit('iconHover', payload); }
-function sendJine(body: string) { emit('jineSend', body); }
-function sendJineSticker(label: string) { emit('jineSticker', label); }
-function markJineRead() { emit('jineRead'); }
+function openMedicationWindow(medicationType: MedicineType) {
+  const appTypeByMedication: Record<MedicineType, WindowAppType> = {
+    depaz: 'medication_depaz',
+    dyslem: 'medication_dyslem',
+    embian: 'medication_embian',
+    magic_smoke: 'medication_magic_smoke',
+  };
+  emit('open', appTypeByMedication[medicationType]);
+}
 </script>
 
 <style scoped>
@@ -183,6 +229,24 @@ function markJineRead() { emit('jineRead'); }
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+.secret-image-app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  box-sizing: border-box;
+  background: #0b0b0b;
+}
+
+.secret-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
 }
 </style>
 
