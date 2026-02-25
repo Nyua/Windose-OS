@@ -1,17 +1,20 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ferrofluid Control icon">
-  <rect x="4.5" y="4.5" width="55" height="55" rx="14" fill="#f2f4f7" stroke="#c9cfd7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ferrofluid Control icon">
   <defs>
-    <clipPath id="ferro-bump-core">
-      <circle cx="32" cy="32" r="15.2"/>
-    </clipPath>
+    <linearGradient id="fc-frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5fdff"/>
+      <stop offset="1" stop-color="#9cc1e4"/>
+    </linearGradient>
+    <radialGradient id="fc-core" cx="34%" cy="28%" r="72%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.56" stop-color="#d7ecff"/>
+      <stop offset="1" stop-color="#9ec5e8"/>
+    </radialGradient>
   </defs>
-  <circle cx="32" cy="32" r="15.2" fill="#f8fafc" stroke="#8e95a0" stroke-width="2.2"/>
-  <g clip-path="url(#ferro-bump-core)">
-    <rect x="16.8" y="16.8" width="15.2" height="30.4" fill="#ffffff"/>
-    <rect x="32" y="16.8" width="15.2" height="30.4" fill="#b9c0cb"/>
-  </g>
-  <circle cx="20.5" cy="32" r="3.2" fill="#f7f9fb" stroke="#9198a4" stroke-width="1.2"/>
-  <circle cx="43.5" cy="32" r="3.2" fill="#c3cad4" stroke="#8a919d" stroke-width="1.2"/>
-  <circle cx="32" cy="20.5" r="3.2" fill="#eff2f7" stroke="#9198a4" stroke-width="1.2"/>
-  <circle cx="32" cy="43.5" r="3.2" fill="#d2d8e1" stroke="#8a919d" stroke-width="1.2"/>
+  <rect x="4.5" y="4.5" width="55" height="55" rx="16" fill="url(#fc-frame)" stroke="#4a7cb2" stroke-width="1.4"/>
+  <rect x="8.6" y="8.6" width="46.8" height="15.2" rx="7.6" fill="rgba(255,255,255,0.45)"/>
+  <circle cx="32" cy="32" r="15.3" fill="url(#fc-core)" stroke="#3f6f9e" stroke-width="2.2"/>
+  <path d="M22.4 32c2.6-5.7 6.9-8.3 10.2-8.3 5.2 0 9.1 4.2 9.1 8.3 0 4.6-3.8 8.3-9 8.3-3.4 0-7.7-2.8-10.3-8.3Z" fill="#d9efff" stroke="#4f83b9" stroke-width="1.6"/>
+  <circle cx="24.8" cy="32" r="2.4" fill="#f8feff" stroke="#4b80b6" stroke-width="1.1"/>
+  <circle cx="39.2" cy="32" r="2.4" fill="#e8f6ff" stroke="#4b80b6" stroke-width="1.1"/>
+  <path d="M32 18.8v6.2M32 39v6.2" stroke="#3f6f9e" stroke-width="1.9" stroke-linecap="round"/>
 </svg>

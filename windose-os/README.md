@@ -9,6 +9,8 @@ Learn more about the recommended Project Setup and IDE Support in the [Vue Docs 
 - Ame's Corner visualizer includes shader-core adaptation inspired by ARTEF4KT (`https://github.com/bogdanspn/artef4kt`), pinned to commit `61a1fdc76cf4c764f7876810542cc9de4d09519c`, reused under permissive ISC licensing.
 - Remote browser implementation note (future resume checklist):
   - `windose-os/docs/remote-browser-future-implementation.md`
+- Ame's Corner post-loader stage is now a single-screen social hub (Steam, Discord, Last.fm, Spotify, SoundCloud, X) and depends on remote extractor allowlist coverage for:
+  - `discord.com`, `www.discord.com`, `soundcloud.com`, `www.soundcloud.com`, `w.soundcloud.com`
 
 ## Internet App Snapshot Mode (Current)
 The Internet app now runs in snapshot-first mode.

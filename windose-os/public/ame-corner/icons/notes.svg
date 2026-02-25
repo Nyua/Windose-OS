@@ -1,6 +1,17 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Notes icon">
-  <rect x="4.5" y="4.5" width="55" height="55" rx="14" fill="#f2f4f7" stroke="#c9cfd7"/>
-  <rect x="18" y="14" width="28" height="36" rx="5" fill="#eef1f5" stroke="#8a919d" stroke-width="2.4"/>
-  <path d="M23.5 24.5h17M23.5 30.5h17M23.5 36.5h12" stroke="#9aa1ad" stroke-width="2" stroke-linecap="round"/>
-  <path d="M37 14v8c0 1.2.9 2.1 2.1 2.1H46" stroke="#8a919d" stroke-width="2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Notes icon">
+  <defs>
+    <linearGradient id="no-frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5fdff"/>
+      <stop offset="1" stop-color="#9cc1e4"/>
+    </linearGradient>
+    <linearGradient id="no-page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fcffff"/>
+      <stop offset="1" stop-color="#cae1f7"/>
+    </linearGradient>
+  </defs>
+  <rect x="4.5" y="4.5" width="55" height="55" rx="16" fill="url(#no-frame)" stroke="#4a7cb2" stroke-width="1.4"/>
+  <rect x="8.6" y="8.6" width="46.8" height="15.2" rx="7.6" fill="rgba(255,255,255,0.45)"/>
+  <path d="M17.5 14h23.8l6.8 6.8V47c0 1.7-1.4 3-3 3H20.5c-1.7 0-3-1.3-3-3V17c0-1.7 1.3-3 3-3Z" fill="url(#no-page)" stroke="#3f6f9e" stroke-width="2.1"/>
+  <path d="M41.3 14v6.7h6.8" fill="none" stroke="#4f83b9" stroke-width="1.8"/>
+  <path d="M23.4 27.1h18.2M23.4 32.7h18.2M23.4 38.3h12.2" stroke="#4e82b8" stroke-width="2" stroke-linecap="round"/>
 </svg>

@@ -8,6 +8,7 @@
       </div>
       <div v-else-if="phase === 'bootscreen'" class="screen bootscreen">
         <div class="bootscreen-image" :style="bootscreenStyle"></div>
+        <div v-if="skipHintVisible" class="boot-skip-hint">Click anywhere to skip</div>
       </div>
       <div v-else-if="phase === 'setup'" class="screen setup">
         <div class="setup-textbox">
@@ -34,6 +35,7 @@ const emit = defineEmits<{ (e: 'complete'): void }>();
 const phase = ref<BootPhase>('black');
 const bootscreenVisible = ref(false);
 const completed = ref(false);
+const skipHintVisible = ref(false);
 let timers: number[] = [];
 
 let biosStartAudio: HTMLAudioElement | null = null;
@@ -101,6 +103,7 @@ function startSequence() {
   phase.value = 'black';
   bootscreenVisible.value = false;
   completed.value = false;
+  skipHintVisible.value = false;
   const blackDelay = blackMs.value;
   const biosDelay = biosMs.value;
   timers.push(window.setTimeout(() => {
@@ -113,14 +116,26 @@ function startSequence() {
       bootscreenVisible.value = true;
     });
   }, blackDelay + biosDelay));
+  timers.push(window.setTimeout(() => {
+    if (phase.value === 'bootscreen' || phase.value === 'bios') {
+      skipHintVisible.value = true;
+    }
+  }, 10000));
 }
 
 function handleClick() {
   if (phase.value === 'bootscreen') {
     stopAudio(bootAudio);
     playAudio(bootCautionAudio);
+    skipHintVisible.value = false;
     phase.value = 'setup';
   }
+}
+
+function isMobileDevice() {
+  if (typeof navigator === 'undefined') return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+    (window.innerWidth <= 900 && 'ontouchstart' in window);
 }
 
 function isFullscreen() {
@@ -133,7 +148,8 @@ function isFullscreen() {
 function checkFullscreen() {
   if (phase.value !== 'setup') return;
   if (completed.value) return;
-  if (isFullscreen()) {
+  // Skip fullscreen requirement on mobile - browsers have limited support
+  if (isMobileDevice() || isFullscreen()) {
     completed.value = true;
     emit('complete');
   }
@@ -251,5 +267,22 @@ onBeforeUnmount(() => {
 .prompt.secondary {
   margin-top: 8px;
   opacity: 0.9;
+}
+.boot-skip-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  animation: skip-hint-fade-in 0.5s ease-out;
+  pointer-events: none;
+}
+@keyframes skip-hint-fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 </style>

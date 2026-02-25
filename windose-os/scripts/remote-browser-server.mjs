@@ -15,7 +15,7 @@ const DEFAULT_SNAPSHOT_WAIT_MS = Number(process.env.REMOTE_BROWSER_SNAPSHOT_WAIT
 const ALLOWED_HOSTS = new Set(
   String(
     process.env.REMOTE_BROWSER_ALLOWED_HOSTS
-      || 'x.com,www.youtube.com,youtube.com,steamcommunity.com,www.last.fm,last.fm,open.spotify.com',
+      || 'x.com,www.youtube.com,youtube.com,steamcommunity.com,www.last.fm,last.fm,open.spotify.com,discord.com,www.discord.com,soundcloud.com,www.soundcloud.com,w.soundcloud.com',
   )
     .split(',')
     .map((entry) => entry.trim().toLowerCase())

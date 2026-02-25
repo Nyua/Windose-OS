@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/ames-corner.css" />
   </head>
   <body>
-    <main class="corner-shell state-bios">
+    <main class="corner-shell theme-chrome state-bios">
       <section class="bios-stage" aria-label="BIOS startup">
         <div class="bios-screen">
           <pre class="bios-log"></pre>
@@ -26,41 +26,18 @@
       </section>
 
       <section id="os-stage" class="os-stage" aria-hidden="true">
-        <canvas id="os-bg-visualizer" class="os-bg-visualizer" aria-hidden="true"></canvas>
-        <header class="os-topbar">
-          <div id="os-datetime" class="os-datetime">0000-00-00 00:00</div>
-        </header>
-
-        <section id="os-desktop" class="os-desktop" aria-label="Desktop"></section>
-        <section id="os-window-layer" class="os-window-layer" aria-label="Windows"></section>
-
-        <footer class="os-taskbar" aria-label="Taskbar">
-          <button id="os-start-button" class="os-start-button" type="button" aria-label="Start" aria-expanded="false" aria-controls="os-start-menu">Start</button>
-          <div id="os-taskbar-apps" class="os-taskbar-apps" aria-label="Pinned apps"></div>
-        </footer>
-
-        <section id="os-start-menu" class="os-start-menu" hidden>
-          <div class="os-start-menu-title">Applications</div>
-          <div class="os-start-menu-apps">
-            <button class="os-start-entry" data-app="recycle-bin" type="button">Recycle Bin</button>
-            <button class="os-start-entry" data-app="file-explorer" type="button">File Explorer</button>
-            <button class="os-start-entry" data-app="notes" type="button">Notes</button>
-            <button class="os-start-entry" data-app="settings" type="button">Settings</button>
-            <button class="os-start-entry" data-app="ferro-control" type="button">Ferrofluid Control</button>
-            <button class="os-start-entry" data-app="about-system" type="button">About System</button>
+        <video class="os-stage-bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+          <source src="/background/2026-01-28 17-41-15.mp4" type="video/mp4" />
+        </video>
+        <div id="social-hub-root" class="social-hub" aria-label="Ame social hub">
+          <div id="social-hub-content" class="social-hub-content">
+            <div id="social-hub-left-rail" class="social-hub-left-rail" aria-label="Profile rail">
+              <section id="social-hub-profile" class="social-hub-profile" aria-label="Profile header"></section>
+              <aside id="social-hub-sidebar" class="social-hub-sidebar" aria-label="Profile sidebar"></aside>
+            </div>
+            <section id="social-hub-showcases" class="social-hub-showcases" aria-label="Social showcases"></section>
           </div>
-          <div class="os-start-menu-divider"></div>
-          <div class="os-start-menu-title">Power</div>
-          <div class="os-start-menu-power">
-            <button id="os-restart-button" class="os-start-entry os-start-entry--power" type="button">Restart</button>
-            <button id="os-shutdown-button" class="os-start-entry os-start-entry--power" type="button">Shut Down</button>
-          </div>
-        </section>
-
-        <section id="os-shutdown-screen" class="os-shutdown-screen" hidden>
-          <p>System asleep.</p>
-          <button id="os-reboot-button" type="button">Reboot</button>
-        </section>
+        </div>
       </section>
     </main>
     <script type="module" src="/src/ames-corner/main.js"></script>

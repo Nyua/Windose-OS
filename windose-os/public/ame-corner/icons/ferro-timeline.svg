@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ferrofluid Timeline icon">
+  <defs>
+    <linearGradient id="ft-frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5fdff"/>
+      <stop offset="1" stop-color="#9cc1e4"/>
+    </linearGradient>
+    <radialGradient id="ft-core" cx="34%" cy="28%" r="72%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.56" stop-color="#d7ecff"/>
+      <stop offset="1" stop-color="#9ec5e8"/>
+    </radialGradient>
+  </defs>
+  <rect x="4.5" y="4.5" width="55" height="55" rx="16" fill="url(#ft-frame)" stroke="#4a7cb2" stroke-width="1.4"/>
+  <rect x="8.6" y="8.6" width="46.8" height="15.2" rx="7.6" fill="rgba(255,255,255,0.45)"/>
+  <circle cx="32" cy="31" r="14.6" fill="url(#ft-core)" stroke="#3f6f9e" stroke-width="2.1"/>
+  <rect x="24" y="23" width="16" height="16" rx="3" fill="#e7f6ff" stroke="#4e82b7" stroke-width="1.4"/>
+  <polygon points="29.8,26.8 35.9,31 29.8,35.2" fill="#3f6f9e"/>
+  <rect x="20.1" y="24" width="2.9" height="14" rx="1" fill="#4f83b9"/>
+  <rect x="41" y="24" width="2.9" height="14" rx="1" fill="#4f83b9"/>
+  <path d="M21.5 43.8h21" stroke="#3f6f9e" stroke-width="2" stroke-linecap="round"/>
+</svg>

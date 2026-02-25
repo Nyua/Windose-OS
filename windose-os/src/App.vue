@@ -27,6 +27,7 @@
         :viewportHeight="viewportHeight"
         :viewportScale="viewportScale"
         :timeSlot="timeSlot"
+        :trashHintVisible="trashHintVisible"
         @open="openWindow"
         @launchAmeCorner="startAmeCornerTransition"
         @focus="focusWindow"
@@ -68,6 +69,7 @@
         @tabClick="onTabClick"
         @open="openWindow"
         @volumeChange="setVolume"
+        @quickButtonHover="onQuickButtonHover"
       />
       <div v-if="jineToast" class="jine-toast" @click="openJineFromToast">
         <div class="jine-toast-icon" aria-hidden="true"></div>
@@ -94,6 +96,7 @@
     </div>
     <div class="ame-crt-poweroff" aria-hidden="true"></div>
     <BootSequence v-if="bootVisible" :mode="bootMode" :blackMs="bootBlackMs" :biosMs="bootBiosMs" :fadeMs="bootFadeMs" @complete="onBootComplete" />
+    <TutorialTooltip :visible="tutorialTooltipVisible" :message="tutorialTooltipMessage" />
   </div>
 </template>
 
@@ -104,6 +107,7 @@ import Desktop from './components/Desktop.vue';
 import Taskbar from './components/Taskbar.vue';
 import StartMenu from './components/StartMenu.vue';
 import BootSequence from './components/BootSequence.vue';
+import TutorialTooltip from './components/TutorialTooltip.vue';
 import { useTimeStore } from './stores/time';
 import { useJineStore } from './stores/jine';
 import { useMedicineStore } from './stores/medicine';
@@ -201,6 +205,105 @@ function markBootSeen() {
   }
 }
 
+const trashHintSeenKey = 'windose_trash_hint_seen_v1';
+const trashHintVisible = ref(false);
+let trashHintTimer: number | null = null;
+const TRASH_HINT_DELAY_MS = 5 * 60 * 1000;
+
+function hasSeenTrashHint() {
+  try {
+    return localStorage.getItem(trashHintSeenKey) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markTrashHintSeen() {
+  try {
+    localStorage.setItem(trashHintSeenKey, '1');
+  } catch {
+    // ignore storage failures
+  }
+  trashHintVisible.value = false;
+  if (trashHintTimer !== null) {
+    window.clearTimeout(trashHintTimer);
+    trashHintTimer = null;
+  }
+}
+
+function startTrashHintTimer() {
+  if (hasSeenTrashHint()) return;
+  if (trashHintTimer !== null) return;
+  trashHintTimer = window.setTimeout(() => {
+    if (!hasSeenTrashHint()) {
+      trashHintVisible.value = true;
+    }
+    trashHintTimer = null;
+  }, TRASH_HINT_DELAY_MS);
+}
+
+const tutorialTooltipVisible = ref(false);
+const tutorialTooltipMessage = ref('');
+let welcomeTutorialTimer: number | null = null;
+const WELCOME_TUTORIAL_DURATION_MS = 5000;
+
+const TUTORIAL_MESSAGES: Record<string, string> = {
+  welcome: 'Welcome to Windose OS! The theme changes throughout the day. Some features are only available at night!',
+  medication: 'Open this to make Ame take Druuuugs >:3 Each medication has unique effects!',
+  jine: 'JINE is a real-time chat! Sign in to chat with others.',
+  trash: 'There are secrets hidden here... Explore!!!!! plz :3',
+};
+
+const tutorialSeenKey = 'windose_tutorials_seen_v1';
+
+function getSeenTutorials(): Set<string> {
+  try {
+    const raw = localStorage.getItem(tutorialSeenKey);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw));
+  } catch {
+    return new Set();
+  }
+}
+
+function hasTutorialBeenSeen(key: string): boolean {
+  return getSeenTutorials().has(key);
+}
+
+function markTutorialSeen(key: string) {
+  try {
+    const seen = getSeenTutorials();
+    seen.add(key);
+    localStorage.setItem(tutorialSeenKey, JSON.stringify([...seen]));
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function showTutorialTooltip(key: string) {
+  const message = TUTORIAL_MESSAGES[key];
+  if (!message) return;
+  // Don't show tutorials that have already been seen (except welcome which auto-hides)
+  if (key !== 'welcome' && hasTutorialBeenSeen(key)) return;
+  tutorialTooltipMessage.value = message;
+  tutorialTooltipVisible.value = true;
+}
+
+function hideTutorialTooltip() {
+  tutorialTooltipVisible.value = false;
+  tutorialTooltipMessage.value = '';
+}
+
+function showWelcomeTutorial() {
+  if (hasTutorialBeenSeen('welcome')) return;
+  markTutorialSeen('welcome');
+  showTutorialTooltip('welcome');
+  welcomeTutorialTimer = window.setTimeout(() => {
+    hideTutorialTooltip();
+    welcomeTutorialTimer = null;
+  }, WELCOME_TUTORIAL_DURATION_MS);
+}
+
 function startBoot(mode: 'startup' | 'restart' | 'shutdown') {
   bootMode.value = mode;
   bootVisible.value = true;
@@ -214,6 +317,8 @@ function onBootComplete() {
     bootVisible.value = false;
     bgmBootReady.value = true;
     syncBgmPlaybackState();
+    startTrashHintTimer();
+    showWelcomeTutorial();
     return;
   }
   if (bootMode.value == 'restart') {
@@ -935,6 +1040,11 @@ function startAmeCornerTransition() {
   clearAmeTransitionRafs();
   resetAmeTransitionVisuals();
   startOpen.value = false;
+
+  // Stop BGM so it doesn't play over the transition SFX
+  bgmBootReady.value = false;
+  syncBgmPlaybackState();
+
   ameTransitionPhase.value = 'stepback';
   ameIntroStage.value = 'waiting';
 
@@ -1167,6 +1277,10 @@ onBeforeUnmount(() => {
   window.visualViewport?.removeEventListener('scroll', updateWindowSize);
   uninstallYouTubeEmbedTracking();
   uninstallAudioConstructorPatch();
+  if (welcomeTutorialTimer !== null) {
+    window.clearTimeout(welcomeTutorialTimer);
+    welcomeTutorialTimer = null;
+  }
   if (startMenuPasswordRevealTimer !== null) {
     window.clearTimeout(startMenuPasswordRevealTimer);
     startMenuPasswordRevealTimer = null;
@@ -1602,6 +1716,21 @@ function scheduleWebcamReopen() {
 }
 
 function onIconHover(payload: IconHoverPayload) {
+  // Handle tutorial tooltips for specific icons
+  if (payload.hovering) {
+    if (payload.id === 'medication') {
+      showTutorialTooltip('medication');
+    } else if (payload.id === 'trash') {
+      showTutorialTooltip('trash');
+    }
+  } else {
+    // Hide tooltip when no longer hovering (unless it's the welcome tutorial)
+    if (tutorialTooltipMessage.value !== TUTORIAL_MESSAGES.welcome) {
+      hideTutorialTooltip();
+    }
+  }
+
+  // Existing secret/webcam behavior
   if (payload.id !== 'secret' || !payload.hovering || !webcamEnabled.value) return;
   ensureWebcamOpen();
   const webcam = getWebcamWindow();
@@ -1621,12 +1750,30 @@ function onIconHover(payload: IconHoverPayload) {
   });
 }
 
+function onQuickButtonHover(button: string, hovering: boolean) {
+  if (hovering && button === 'jine') {
+    showTutorialTooltip('jine');
+  } else if (!hovering && tutorialTooltipMessage.value === TUTORIAL_MESSAGES.jine) {
+    hideTutorialTooltip();
+  }
+}
+
 function openWindow(appType: WindowAppType) {
   if (ameTransitionActive.value) return;
 
+  if (appType === 'trash') {
+    markTrashHintSeen();
+    markTutorialSeen('trash');
+  }
+
   if (appType === 'medication') {
+    markTutorialSeen('medication');
     openMedicationWindows();
     return;
+  }
+
+  if (appType === 'jine') {
+    markTutorialSeen('jine');
   }
 
   if (appType === 'hangout') {
@@ -1956,6 +2103,65 @@ function updateSetting(key: string, value: SettingValue) {
 .app-root.app-root--mobile .side-fill {
   display: none;
 }
+
+/* Mobile touch target improvements */
+.app-root.app-root--mobile :deep(.tab) {
+  min-height: 44px;
+  padding: 8px 10px;
+}
+.app-root.app-root--mobile :deep(.start) {
+  min-height: 44px;
+  min-width: 100px;
+  touch-action: manipulation;
+}
+.app-root.app-root--mobile :deep(.quick-btn) {
+  width: 44px;
+  height: 44px;
+  touch-action: manipulation;
+}
+.app-root.app-root--mobile :deep(.volume) {
+  padding: 4px 8px;
+}
+.app-root.app-root--mobile :deep(.volume input) {
+  height: 44px;
+  cursor: pointer;
+}
+.app-root.app-root--mobile :deep(.volume input::-webkit-slider-thumb) {
+  width: 28px;
+  height: 28px;
+}
+.app-root.app-root--mobile :deep(.volume input::-moz-range-thumb) {
+  width: 28px;
+  height: 28px;
+}
+.app-root.app-root--mobile :deep(.desktop-icon) {
+  touch-action: manipulation;
+  padding: 12px;
+}
+/* Mobile window controls */
+.app-root.app-root--mobile :deep(.buttons) {
+  gap: 6px;
+}
+.app-root.app-root--mobile :deep(.btn) {
+  width: 32px;
+  height: 32px;
+  background-size: 16px 16px;
+}
+.app-root.app-root--mobile :deep(.title-bar) {
+  min-height: 40px;
+  padding: 6px 8px;
+}
+/* Mobile start menu items */
+.app-root.app-root--mobile :deep(.menu-item) {
+  min-height: 48px;
+  padding: 12px 16px;
+}
+/* Prevent accidental double-tap zoom */
+.app-root.app-root--mobile {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .desktop-shell {
   position: relative;
   width: 100%;
@@ -2327,7 +2533,6 @@ function updateSetting(key: string, value: SettingValue) {
 }
 
 </style>
-
 
 
 

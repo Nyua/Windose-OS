@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import { SOCIAL_HUB_SITES, createSeedPayloadMap } from './social-hub/config';
+import { createSocialHubDataSources } from './social-hub/data-sources';
+import { createSocialHubRenderer } from './social-hub/render';
+import { createSocialHubState } from './social-hub/state';
 
 const root = document.querySelector('.corner-shell');
 const biosLog = document.querySelector('.bios-log');
@@ -11,6 +15,12 @@ const osLoaderProgressFill = document.querySelector('#os-loader-progress-fill');
 const osLoaderReadout = document.querySelector('#os-loader-readout');
 
 const osStage = document.querySelector('#os-stage');
+const socialHubRoot = document.querySelector('#social-hub-root');
+const socialHubProfile = document.querySelector('#social-hub-profile');
+const socialHubShowcases = document.querySelector('#social-hub-showcases');
+const socialHubSidebar = document.querySelector('#social-hub-sidebar');
+const socialHubLastRefresh = document.querySelector('#social-hub-last-refresh');
+const socialHubRefreshButton = document.querySelector('#social-hub-refresh');
 const osDesktop = document.querySelector('#os-desktop');
 const osWindowLayer = document.querySelector('#os-window-layer');
 const osTaskbar = document.querySelector('.os-taskbar');
@@ -53,6 +63,8 @@ const STORAGE_ICON_LAYOUT_SHIFT_UP = 'ames_corner_os_icon_layout_shift_up_v1';
 const STORAGE_NOTES = 'ames_corner_os_notes_v1';
 const STORAGE_SETTINGS = 'ames_corner_os_settings_v1';
 const STORAGE_TASKBAR_PINS = 'ames_corner_os_taskbar_pins_v1';
+const STORAGE_FERRO_SPIN_TIMELINE_USER = 'ames_corner_ferro_spin_timeline_user_v1';
+const STORAGE_FERRO_SPIN_TIMELINE_DEFAULT = 'ames_corner_ferro_spin_timeline_default_v1';
 
 const UNKNOWN_TELEMETRY = 'UNKNOWN';
 const AUTH_PROFILE_STORAGE_KEY = 'windose_auth_profile_v2';
@@ -71,6 +83,19 @@ const LOADER_READOUT_MAX_LINES = 13;
 const MINIMIZE_SUCTION_DURATION_MS = 360;
 const MINIMIZE_AFTERIMAGE_FRAME_INTERVAL = 3;
 const MOBILE_BREAKPOINT_PX = 900;
+const MOBILE_TASKBAR_EDGE_GUTTER_PX = 10;
+const MOBILE_TASKBAR_INLINE_PADDING_PX = 8;
+const MOBILE_TASKBAR_START_BUTTON_PX = 46;
+const MOBILE_TASKBAR_MAIN_GAP_PX = 7;
+const MOBILE_TASKBAR_APP_BUTTON_PX = 46;
+const MOBILE_TASKBAR_APP_GAP_PX = 6;
+const THEME_MODE_CHROME = 'chrome';
+const THEME_MODE_LIGHT = 'light';
+const THEME_MODE_DARK = 'dark';
+const MOBILE_DOCK_WOBBLE_MAX_X_PX = 7;
+const MOBILE_DOCK_WOBBLE_MAX_Y_PX = 5;
+const MOBILE_DOCK_WOBBLE_MAX_ROT_DEG = 1.35;
+const MOBILE_DOCK_WOBBLE_DAMPING = 0.17;
 
 const LOADER_READOUT_STEPS = [
   { at: 0.0, text: 'bios handoff accepted. preparing shell.', action: 'loader-scene' },
@@ -131,6 +156,15 @@ const OS_APPS = [
     window: { width: 520, height: 320 },
   },
   {
+    id: 'ferro-timeline',
+    title: 'Timeline Editor',
+    icon: '/ame-corner/icons/ferro-timeline.svg',
+    desktop: false,
+    taskbarDefaultPinned: true,
+    taskbarRequired: true,
+    window: { width: 1280, height: 620 },
+  },
+  {
     id: 'about-system',
     title: 'About System',
     icon: '/ame-corner/icons/about-system.svg',
@@ -145,7 +179,10 @@ const DEFAULT_SETTINGS = {
   motionIntensity: 0.34,
   ferroOrbitEnabled: false,
   ferroZoomEnabled: false,
+  liveOrbReactionEnabled: true,
+  musicVolumePercent: 100,
   taskbarStyle: 'diffuse',
+  themeMode: THEME_MODE_CHROME,
 };
 
 const BG_QUALITY_CONFIG = {
@@ -154,8 +191,10 @@ const BG_QUALITY_CONFIG = {
   low: { subdivisions: 4, pixelRatio: 1.0 },
 };
 
-const BG_MUSIC_SRC = '/music/CalmSitePlaylist.mp3';
-const BG_MUSIC_VOLUME = 0.14;
+const BG_MUSIC_SRC = '/music/Quadeca - Vanisher, Horizon Scraper： (Vinyl Exclusives).mp3';
+const BG_MUSIC_VOLUME_BASE = 0.14;
+const BG_MUSIC_VOLUME_MIN_PERCENT = 50;
+const BG_MUSIC_VOLUME_MAX_PERCENT = 200;
 const BG_AUDIO_FFT_SIZE = 1024;
 const BG_ORIGINAL_CAMERA_DISTANCE = 5.3;
 const BG_DEFAULT_CAMERA_DISTANCE = 14.4;
@@ -164,8 +203,113 @@ const BG_MAX_CAMERA_DISTANCE = 18.2;
 const BG_ORBIT_DRAG_SENSITIVITY_X = 0.0041;
 const BG_ORBIT_DRAG_SENSITIVITY_Y = 0.0032;
 const BG_FERRO_ALPHA_MULTIPLIER = 0.81;
+const BG_FERRO_ALPHA_FINAL_SCALE = 0.5;
+const BG_FERRO_INTRO_START_Y = 2.2;
+const BG_FERRO_INTRO_IMPACT_Y = -0.22;
+const BG_FERRO_INTRO_DROP_MS = 540;
+const BG_FERRO_INTRO_BOUNCE_MS = 640;
+const BG_FERRO_INTRO_BOUNCE_AMPLITUDE = 0.24;
+const BG_FERRO_INTRO_BOUNCE_DAMPING = 5.6;
+const BG_FERRO_INTRO_BOUNCE_FREQ = 12.0;
+const BG_SPIN_BASE_RATE = 0.00090;
+const BG_SPIN_AUDIO_RATE = 0.00034;
+const BG_SPIN_MIN_MULTIPLIER = -2400;
+const BG_SPIN_MAX_MULTIPLIER = 2400;
+const FERRO_SCRUB_FINE_STEP_SEC = 0.01;
+const FERRO_SCRUB_PAGE_STEP_SEC = 1;
+const FERRO_SCRUB_JUMP_SMALL_SEC = 1;
+const FERRO_SCRUB_JUMP_LARGE_SEC = 5;
+const FERRO_SEGMENT_MIN_SPAN_SEC = 0.05;
+const FERRO_SEGMENT_MAX_SPEED = 2400;
+const FERRO_TIMELINE_MAX_SEGMENTS = 120;
+const FERRO_TIMELINE_ZOOM_MIN = 1;
+const FERRO_TIMELINE_ZOOM_MAX = 12;
+const FERRO_TIMELINE_ZOOM_STEP = 0.25;
 const TASKBAR_STYLE_DIFFUSE = 'diffuse';
 const TASKBAR_STYLE_OUTLINE = 'outline';
+const WINDOW_SIZE_MIN_PERCENT = 20;
+const WINDOW_SIZE_MAX_PERCENT = 200;
+
+const DEFAULT_FERRO_SPIN_TIMELINE = [
+  {
+    id: 'seg-001',
+    enabled: true,
+    startSec: 550.5,
+    endSec: 552.0,
+    direction: 'cw',
+    speedStart: 1,
+    speedEnd: 9.5,
+    easing: 'ease-in',
+    stopMode: 'none',
+    stopCycleSec: 0.2,
+    stopDurationSec: 0.08,
+  },
+  {
+    id: 'seg-002',
+    enabled: true,
+    startSec: 552.0,
+    endSec: 553.0,
+    direction: 'cw',
+    speedStart: 9.5,
+    speedEnd: 13.5,
+    easing: 'ease-in-out',
+    stopMode: 'intermittent',
+    stopCycleSec: 0.2,
+    stopDurationSec: 0.08,
+  },
+  {
+    id: 'seg-003',
+    enabled: true,
+    startSec: 553.0,
+    endSec: 556.0,
+    direction: 'cw',
+    speedStart: 13.5,
+    speedEnd: 22,
+    easing: 'ease-in-out',
+    stopMode: 'none',
+    stopCycleSec: 0.2,
+    stopDurationSec: 0.08,
+  },
+  {
+    id: 'seg-004',
+    enabled: true,
+    startSec: 556.0,
+    endSec: 557.0,
+    direction: 'cw',
+    speedStart: 22,
+    speedEnd: 28,
+    easing: 'ease-in-out',
+    stopMode: 'intermittent',
+    stopCycleSec: 0.2,
+    stopDurationSec: 0.08,
+  },
+  {
+    id: 'seg-005',
+    enabled: true,
+    startSec: 557.0,
+    endSec: 576.0,
+    direction: 'cw',
+    speedStart: 28,
+    speedEnd: 1000,
+    easing: 'ease-in',
+    stopMode: 'none',
+    stopCycleSec: 0.2,
+    stopDurationSec: 0.08,
+  },
+  {
+    id: 'seg-006',
+    enabled: true,
+    startSec: 576.0,
+    endSec: 581.0,
+    direction: 'cw',
+    speedStart: 1000,
+    speedEnd: 1,
+    easing: 'ease-out',
+    stopMode: 'none',
+    stopCycleSec: 0.2,
+    stopDurationSec: 0.08,
+  },
+];
 
 const BG_FERRO_VERTEX_SHADER = `
 uniform float uTime;
@@ -246,6 +390,8 @@ const BG_FERRO_FRAGMENT_SHADER = `
 uniform vec3 uBaseColor;
 uniform float uAlpha;
 uniform float uIntensity;
+uniform float uHighlightStrength;
+uniform float uAlphaFinalScale;
 
 varying vec3 vWorldPos;
 varying vec3 vViewDir;
@@ -271,9 +417,10 @@ void main() {
     frontFacing * (0.52 + uIntensity * 0.14)
     + (fres * 0.12)
     + sheen * (0.06 + uIntensity * 0.12)
-  );
+  ) * uHighlightStrength;
   vec3 color = base + highlight;
-  float alpha = clamp(uAlpha + fres * 0.08 + sheen * 0.05, 0.32, 0.78);
+  float baseAlpha = clamp(uAlpha + fres * 0.08 + sheen * 0.05, 0.32, 0.78);
+  float alpha = clamp(baseAlpha * uAlphaFinalScale, 0.0, 1.0);
   gl_FragColor = vec4(color, alpha);
 }
 `;
@@ -308,9 +455,24 @@ let loaderSpinStartY = 0;
 let loaderSpinTargetY = Math.PI * 2;
 let osInitialized = false;
 let osRestartInFlight = false;
+let socialHubInitialized = false;
+let socialHubRenderer = null;
+let socialHubState = null;
 let dockInteractionsBound = false;
 let dockPointerMoveHandler = null;
 let dockPointerLeaveHandler = null;
+let dockPointerDownHandler = null;
+let dockPointerUpHandler = null;
+let dockActiveTouchPointerId = null;
+let dockWobbleRafId = 0;
+let dockWobbleCurrentX = 0;
+let dockWobbleCurrentY = 0;
+let dockWobbleCurrentRot = 0;
+let dockWobbleTargetX = 0;
+let dockWobbleTargetY = 0;
+let dockWobbleTargetRot = 0;
+let dockOrientationListenerBound = false;
+let dockOrientationPermissionRequested = false;
 
 let dateTimeIntervalId = 0;
 let windowZCounter = 30;
@@ -368,6 +530,16 @@ let bgAudioEnergy = 0;
 let bgAudioLow = 0;
 let bgAudioMid = 0;
 let bgAudioHigh = 0;
+let bgSpinTimeline = [];
+let bgSpinSegmentIdSeed = 0;
+let ferroTimelinePreviewCanvas = null;
+let ferroTimelinePreviewCtx = null;
+let ferroTimelinePreviewTimeLabel = null;
+const bgFerroIntro = {
+  played: false,
+  active: false,
+  startedAtMs: 0,
+};
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -375,6 +547,169 @@ function clamp(value, min, max) {
 
 function randomBetween(min, max) {
   return (Math.random() * (max - min)) + min;
+}
+
+function rangeProgress(value, start, end) {
+  if (!Number.isFinite(value)) return 0;
+  if (end <= start) return value >= end ? 1 : 0;
+  return clamp((value - start) / (end - start), 0, 1);
+}
+
+function lerpValue(start, end, t) {
+  return start + ((end - start) * clamp(t, 0, 1));
+}
+
+function easeInCubic(t) {
+  const clamped = clamp(t, 0, 1);
+  return clamped ** 3;
+}
+
+function easeOutCubic(t) {
+  const clamped = clamp(t, 0, 1);
+  return 1 - ((1 - clamped) ** 3);
+}
+
+function easeInOutCubic(t) {
+  const clamped = clamp(t, 0, 1);
+  return clamped < 0.5
+    ? 4 * (clamped ** 3)
+    : 1 - (((-2 * clamped) + 2) ** 3) / 2;
+}
+
+function applySpinEasing(t, easingMode) {
+  if (easingMode === 'ease-in') return easeInCubic(t);
+  if (easingMode === 'ease-out') return easeOutCubic(t);
+  if (easingMode === 'ease-in-out') return easeInOutCubic(t);
+  return clamp(t, 0, 1);
+}
+
+function createSpinSegmentId() {
+  bgSpinSegmentIdSeed += 1;
+  return `seg-${Date.now().toString(36)}-${bgSpinSegmentIdSeed.toString(36)}`;
+}
+
+function cloneSpinTimelineSegments(segments) {
+  return Array.isArray(segments)
+    ? segments.map((segment) => ({ ...segment }))
+    : [];
+}
+
+function sanitizeSpinSegment(rawSegment, fallbackIndex = 0) {
+  if (!rawSegment || typeof rawSegment !== 'object') return null;
+
+  const startSec = Math.max(0, Number(rawSegment.startSec) || 0);
+  const endCandidate = Number(rawSegment.endSec);
+  const endSec = Number.isFinite(endCandidate)
+    ? Math.max(startSec + FERRO_SEGMENT_MIN_SPAN_SEC, endCandidate)
+    : startSec + 1;
+
+  const speedStart = clamp(Math.abs(Number(rawSegment.speedStart) || 1), 0, FERRO_SEGMENT_MAX_SPEED);
+  const speedEnd = clamp(Math.abs(Number(rawSegment.speedEnd) || speedStart), 0, FERRO_SEGMENT_MAX_SPEED);
+  const direction = rawSegment.direction === 'ccw' ? 'ccw' : 'cw';
+
+  const easing = (() => {
+    const mode = String(rawSegment.easing || 'linear');
+    if (mode === 'ease-in' || mode === 'ease-out' || mode === 'ease-in-out') return mode;
+    return 'linear';
+  })();
+
+  const stopMode = rawSegment.stopMode === 'intermittent' ? 'intermittent' : 'none';
+  const stopCycleSec = clamp(Number(rawSegment.stopCycleSec) || 0.2, 0.05, 6);
+  const stopDurationSec = clamp(
+    Number(rawSegment.stopDurationSec) || 0.08,
+    0,
+    Math.max(0.001, stopCycleSec - 0.001),
+  );
+
+  const id = (() => {
+    const candidate = String(rawSegment.id || '').trim();
+    if (candidate) return candidate.slice(0, 48);
+    return `seg-${String(fallbackIndex + 1).padStart(3, '0')}`;
+  })();
+
+  return {
+    id,
+    enabled: rawSegment.enabled !== false,
+    startSec,
+    endSec,
+    direction,
+    speedStart,
+    speedEnd,
+    easing,
+    stopMode,
+    stopCycleSec,
+    stopDurationSec,
+  };
+}
+
+function sanitizeSpinTimeline(rawTimeline) {
+  if (!Array.isArray(rawTimeline)) return [];
+  const normalized = [];
+  for (let i = 0; i < rawTimeline.length; i += 1) {
+    if (normalized.length >= FERRO_TIMELINE_MAX_SEGMENTS) break;
+    const segment = sanitizeSpinSegment(rawTimeline[i], i);
+    if (!segment) continue;
+    normalized.push(segment);
+  }
+  normalized.sort((a, b) => {
+    if (a.startSec !== b.startSec) return a.startSec - b.startSec;
+    if (a.endSec !== b.endSec) return a.endSec - b.endSec;
+    return a.id.localeCompare(b.id);
+  });
+  return normalized;
+}
+
+function getSpinTimelineMaxEndSec(timeline = bgSpinTimeline) {
+  if (!Array.isArray(timeline) || !timeline.length) return 0;
+  let max = 0;
+  for (const segment of timeline) {
+    if (!segment || !Number.isFinite(segment.endSec)) continue;
+    max = Math.max(max, segment.endSec);
+  }
+  return max;
+}
+
+function intermittentStopGate(trackTimeSec, windowStartSec, cycleSec, stopDurationSec) {
+  if (!Number.isFinite(trackTimeSec)) return 1;
+  if (!Number.isFinite(windowStartSec)) return 1;
+  if (!Number.isFinite(cycleSec) || cycleSec <= 0) return 1;
+  if (!Number.isFinite(stopDurationSec) || stopDurationSec <= 0) return 1;
+  const local = trackTimeSec - windowStartSec;
+  if (local < 0) return 1;
+  const phase = local % cycleSec;
+  return phase < stopDurationSec ? 0 : 1;
+}
+
+function getScriptedOrbSpinMultiplier(trackTimeSec) {
+  if (!Number.isFinite(trackTimeSec)) return 1;
+  if (!Array.isArray(bgSpinTimeline) || bgSpinTimeline.length === 0) return 1;
+
+  let activeSegment = null;
+  for (const segment of bgSpinTimeline) {
+    if (!segment?.enabled) continue;
+    if (trackTimeSec < segment.startSec || trackTimeSec > segment.endSec) continue;
+    activeSegment = segment;
+  }
+
+  if (!activeSegment) return 1;
+
+  const span = Math.max(FERRO_SEGMENT_MIN_SPAN_SEC, activeSegment.endSec - activeSegment.startSec);
+  const localProgress = clamp((trackTimeSec - activeSegment.startSec) / span, 0, 1);
+  const easedProgress = applySpinEasing(localProgress, activeSegment.easing);
+  const speed = lerpValue(activeSegment.speedStart, activeSegment.speedEnd, easedProgress);
+  const direction = activeSegment.direction === 'ccw' ? -1 : 1;
+  let multiplier = speed * direction;
+
+  if (activeSegment.stopMode === 'intermittent') {
+    multiplier *= intermittentStopGate(
+      trackTimeSec,
+      activeSegment.startSec,
+      activeSegment.stopCycleSec,
+      activeSegment.stopDurationSec,
+    );
+  }
+
+  return clamp(multiplier, BG_SPIN_MIN_MULTIPLIER, BG_SPIN_MAX_MULTIPLIER);
 }
 
 function setManagedTimeout(callback, ms) {
@@ -443,7 +778,7 @@ function playTypingSound() {
   if (!clip) return;
   try {
     clip.currentTime = 0;
-    void clip.play().catch(() => {});
+    void clip.play().catch(() => { });
   } catch {
     // autoplay restrictions can block by design
   }
@@ -1125,6 +1460,7 @@ function runLoaderReadoutAction(step) {
 
   if (action === 'load-settings') {
     loadSettings();
+    applyThemeMode();
     appendLoaderReadoutLine(`  motion profile: ${osSettings.motionEnabled ? 'enabled' : 'disabled'} @ ${osSettings.motionIntensity.toFixed(2)}`);
     return;
   }
@@ -1155,7 +1491,7 @@ function runLoaderReadoutAction(step) {
 
   if (action === 'prime-shell') {
     if (!loaderShellPrimed) {
-      initializeOsShellIfNeeded();
+      initializeSocialHubIfNeeded();
       loaderShellPrimed = true;
       appendLoaderReadoutLine('  shell preflight complete.');
     }
@@ -1420,8 +1756,72 @@ function safeParseJson(raw, fallback) {
   }
 }
 
+function isOwnerOperatorProfile() {
+  return readStoredOperatorHandle().toLowerCase() === 'joser';
+}
+
+function loadFerroSpinTimeline() {
+  const builtInDefault = sanitizeSpinTimeline(DEFAULT_FERRO_SPIN_TIMELINE);
+  const storedDefault = sanitizeSpinTimeline(safeParseJson(
+    localStorage.getItem(STORAGE_FERRO_SPIN_TIMELINE_DEFAULT),
+    [],
+  ));
+  const storedUser = sanitizeSpinTimeline(safeParseJson(
+    localStorage.getItem(STORAGE_FERRO_SPIN_TIMELINE_USER),
+    [],
+  ));
+
+  if (storedUser.length) {
+    bgSpinTimeline = cloneSpinTimelineSegments(storedUser);
+    return;
+  }
+  if (storedDefault.length) {
+    bgSpinTimeline = cloneSpinTimelineSegments(storedDefault);
+    return;
+  }
+  bgSpinTimeline = cloneSpinTimelineSegments(builtInDefault);
+}
+
+function persistFerroSpinTimeline({ saveDefault = false } = {}) {
+  try {
+    bgSpinTimeline = sanitizeSpinTimeline(bgSpinTimeline);
+    if (!bgSpinTimeline.length) {
+      bgSpinTimeline = sanitizeSpinTimeline(DEFAULT_FERRO_SPIN_TIMELINE);
+    }
+
+    localStorage.setItem(STORAGE_FERRO_SPIN_TIMELINE_USER, JSON.stringify(bgSpinTimeline));
+    if (saveDefault && isOwnerOperatorProfile()) {
+      localStorage.setItem(STORAGE_FERRO_SPIN_TIMELINE_DEFAULT, JSON.stringify(bgSpinTimeline));
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resetFerroSpinTimelineToDefault() {
+  const storedDefault = sanitizeSpinTimeline(safeParseJson(
+    localStorage.getItem(STORAGE_FERRO_SPIN_TIMELINE_DEFAULT),
+    [],
+  ));
+  bgSpinTimeline = storedDefault.length
+    ? cloneSpinTimelineSegments(storedDefault)
+    : sanitizeSpinTimeline(DEFAULT_FERRO_SPIN_TIMELINE);
+}
+
+function coerceThemeMode(value) {
+  if (typeof value !== 'string') return THEME_MODE_CHROME;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === THEME_MODE_CHROME) return THEME_MODE_CHROME;
+  if (normalized === THEME_MODE_LIGHT || normalized === THEME_MODE_DARK) return THEME_MODE_CHROME;
+  return THEME_MODE_CHROME;
+}
+
 function loadSettings() {
   const parsed = safeParseJson(localStorage.getItem(STORAGE_SETTINGS), {});
+  const storedThemeMode = typeof parsed?.themeMode === 'string'
+    ? parsed.themeMode.trim().toLowerCase()
+    : '';
   const motionEnabled = parsed && typeof parsed.motionEnabled === 'boolean'
     ? parsed.motionEnabled
     : DEFAULT_SETTINGS.motionEnabled;
@@ -1434,10 +1834,29 @@ function loadSettings() {
   const ferroZoomEnabled = parsed && typeof parsed.ferroZoomEnabled === 'boolean'
     ? parsed.ferroZoomEnabled
     : DEFAULT_SETTINGS.ferroZoomEnabled;
+  const liveOrbReactionEnabled = parsed && typeof parsed.liveOrbReactionEnabled === 'boolean'
+    ? parsed.liveOrbReactionEnabled
+    : DEFAULT_SETTINGS.liveOrbReactionEnabled;
+  const musicVolumePercent = Number.isFinite(Number(parsed?.musicVolumePercent))
+    ? clamp(Number(parsed.musicVolumePercent), BG_MUSIC_VOLUME_MIN_PERCENT, BG_MUSIC_VOLUME_MAX_PERCENT)
+    : DEFAULT_SETTINGS.musicVolumePercent;
+  const themeMode = coerceThemeMode(parsed?.themeMode);
   const taskbarStyle = parsed?.taskbarStyle === TASKBAR_STYLE_OUTLINE
     ? TASKBAR_STYLE_OUTLINE
     : TASKBAR_STYLE_DIFFUSE;
-  osSettings = { motionEnabled, motionIntensity, ferroOrbitEnabled, ferroZoomEnabled, taskbarStyle };
+  osSettings = {
+    motionEnabled,
+    motionIntensity,
+    ferroOrbitEnabled,
+    ferroZoomEnabled,
+    liveOrbReactionEnabled,
+    musicVolumePercent,
+    taskbarStyle,
+    themeMode,
+  };
+  if (storedThemeMode !== THEME_MODE_CHROME) {
+    persistSettings();
+  }
 }
 
 function persistSettings() {
@@ -1446,7 +1865,10 @@ function persistSettings() {
     motionIntensity: clamp(Number(osSettings.motionIntensity), 0, 1),
     ferroOrbitEnabled: Boolean(osSettings.ferroOrbitEnabled),
     ferroZoomEnabled: Boolean(osSettings.ferroZoomEnabled),
+    liveOrbReactionEnabled: Boolean(osSettings.liveOrbReactionEnabled),
+    musicVolumePercent: clamp(Number(osSettings.musicVolumePercent), BG_MUSIC_VOLUME_MIN_PERCENT, BG_MUSIC_VOLUME_MAX_PERCENT),
     taskbarStyle: osSettings.taskbarStyle === TASKBAR_STYLE_OUTLINE ? TASKBAR_STYLE_OUTLINE : TASKBAR_STYLE_DIFFUSE,
+    themeMode: coerceThemeMode(osSettings.themeMode),
   }));
 }
 
@@ -1457,8 +1879,40 @@ function applyTaskbarStyle() {
   root.classList.toggle('taskbar-style-diffuse', !useOutline);
 }
 
+function getThemeFerroBaseColorHex() {
+  return 0xa3b8cf;
+}
+
+function getThemeFerroHighlightStrength() {
+  return 0.92;
+}
+
+function getThemeFerroAlphaScale() {
+  return 1;
+}
+
+function applyFerroThemeUniforms() {
+  if (!bgFerroMaterial) return;
+  if (bgFerroMaterial.uniforms.uBaseColor?.value instanceof THREE.Color) {
+    bgFerroMaterial.uniforms.uBaseColor.value.setHex(getThemeFerroBaseColorHex());
+  }
+  if (bgFerroMaterial.uniforms.uHighlightStrength) {
+    bgFerroMaterial.uniforms.uHighlightStrength.value = getThemeFerroHighlightStrength();
+  }
+}
+
+function applyThemeMode() {
+  if (!root) return;
+  root.classList.add('theme-chrome');
+  root.classList.remove('theme-dark', 'theme-light');
+  osSettings.themeMode = THEME_MODE_CHROME;
+  applyFerroThemeUniforms();
+}
+
 function defaultTaskbarPins() {
-  return OS_APPS.map((app) => app.id);
+  return OS_APPS
+    .filter((app) => app.taskbarDefaultPinned !== false)
+    .map((app) => app.id);
 }
 
 function loadTaskbarPins() {
@@ -1481,6 +1935,12 @@ function loadTaskbarPins() {
     if (!validIds.has(appId)) continue;
     if (filtered.includes(appId)) continue;
     filtered.push(appId);
+  }
+
+  for (const app of OS_APPS) {
+    if (!app.taskbarRequired) continue;
+    if (filtered.includes(app.id)) continue;
+    filtered.push(app.id);
   }
 
   pinnedTaskbarAppIds = filtered;
@@ -1535,6 +1995,8 @@ function pinTaskbarApp(appId) {
 }
 
 function unpinTaskbarApp(appId) {
+  const meta = getAppMeta(appId);
+  if (meta?.taskbarRequired) return;
   const idx = pinnedTaskbarAppIds.indexOf(appId);
   if (idx < 0) return;
   pinnedTaskbarAppIds.splice(idx, 1);
@@ -1572,6 +2034,7 @@ function loadIconLayoutMap() {
   const nextMap = new Map();
   if (!parsed || typeof parsed !== 'object') return nextMap;
   for (const app of OS_APPS) {
+    if (app.desktop === false) continue;
     const value = parsed[app.id];
     if (!value || typeof value !== 'object') continue;
     const x = Number(value.x);
@@ -1591,10 +2054,26 @@ function persistIconLayoutMap() {
 }
 
 function isMobileLayout() {
-  const query = window.matchMedia?.(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
-  if (query && typeof query.matches === 'boolean') {
-    return query.matches;
+  const narrowQuery = window.matchMedia?.(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
+  if (narrowQuery && typeof narrowQuery.matches === 'boolean' && narrowQuery.matches) {
+    return true;
   }
+
+  const coarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches;
+  const shortViewport = window.innerHeight <= 560;
+  const touchPoints = Number.isFinite(Number(navigator.maxTouchPoints))
+    ? Number(navigator.maxTouchPoints)
+    : 0;
+
+  const touchFirstTabletWidth = window.innerWidth <= 1366;
+  if (touchFirstTabletWidth && (coarsePointer || touchPoints > 0)) {
+    return true;
+  }
+
+  if (shortViewport && (coarsePointer || touchPoints > 0)) {
+    return true;
+  }
+
   return window.innerWidth <= MOBILE_BREAKPOINT_PX;
 }
 
@@ -1670,6 +2149,32 @@ function setTaskbarActiveState() {
   }
 }
 
+function syncMobileTaskbarInlineWidth() {
+  if (!osTaskbar) return;
+  if (!isMobileLayout() || !osTaskbarApps) {
+    osTaskbar.style.removeProperty('--os-taskbar-inline-width');
+    return;
+  }
+
+  const appCount = osTaskbarApps.querySelectorAll('.os-taskbar-app').length;
+  const appsInlineWidth = appCount > 0
+    ? (appCount * MOBILE_TASKBAR_APP_BUTTON_PX) + ((appCount - 1) * MOBILE_TASKBAR_APP_GAP_PX)
+    : 0;
+
+  const contentInlineWidth = (MOBILE_TASKBAR_INLINE_PADDING_PX * 2)
+    + MOBILE_TASKBAR_START_BUTTON_PX
+    + (appCount > 0 ? MOBILE_TASKBAR_MAIN_GAP_PX : 0)
+    + appsInlineWidth;
+
+  const minInlineWidth = (MOBILE_TASKBAR_INLINE_PADDING_PX * 2) + MOBILE_TASKBAR_START_BUTTON_PX;
+  const maxInlineWidth = Math.max(
+    minInlineWidth,
+    window.innerWidth - MOBILE_TASKBAR_EDGE_GUTTER_PX - (window.visualViewport?.offsetLeft || 0),
+  );
+  const inlineWidth = clamp(contentInlineWidth, minInlineWidth, maxInlineWidth);
+  osTaskbar.style.setProperty('--os-taskbar-inline-width', `${Math.round(inlineWidth)}px`);
+}
+
 function getDockButtons() {
   const buttons = [];
   if (osStartButton instanceof HTMLButtonElement) {
@@ -1713,42 +2218,184 @@ function updateDockMagnification(clientX, hoveredButton = null) {
   }
 }
 
-function setupDockInteractions() {
+function setDockWobblePose(xPx, yPx, rotDeg) {
   if (!osTaskbar) return;
-  if (isMobileLayout()) {
-    teardownDockInteractions();
+  osTaskbar.style.setProperty('--dock-wobble-x', `${xPx.toFixed(2)}px`);
+  osTaskbar.style.setProperty('--dock-wobble-y', `${yPx.toFixed(2)}px`);
+  osTaskbar.style.setProperty('--dock-wobble-rot', `${rotDeg.toFixed(3)}deg`);
+}
+
+function resetDockWobblePose() {
+  dockWobbleCurrentX = 0;
+  dockWobbleCurrentY = 0;
+  dockWobbleCurrentRot = 0;
+  dockWobbleTargetX = 0;
+  dockWobbleTargetY = 0;
+  dockWobbleTargetRot = 0;
+  setDockWobblePose(0, 0, 0);
+}
+
+function stopDockWobbleLoop() {
+  if (dockWobbleRafId) {
+    window.cancelAnimationFrame(dockWobbleRafId);
+    dockWobbleRafId = 0;
+  }
+}
+
+function runDockWobbleFrame() {
+  dockWobbleCurrentX += (dockWobbleTargetX - dockWobbleCurrentX) * MOBILE_DOCK_WOBBLE_DAMPING;
+  dockWobbleCurrentY += (dockWobbleTargetY - dockWobbleCurrentY) * MOBILE_DOCK_WOBBLE_DAMPING;
+  dockWobbleCurrentRot += (dockWobbleTargetRot - dockWobbleCurrentRot) * MOBILE_DOCK_WOBBLE_DAMPING;
+  setDockWobblePose(dockWobbleCurrentX, dockWobbleCurrentY, dockWobbleCurrentRot);
+
+  const stillMoving = Math.abs(dockWobbleTargetX - dockWobbleCurrentX) > 0.02
+    || Math.abs(dockWobbleTargetY - dockWobbleCurrentY) > 0.02
+    || Math.abs(dockWobbleTargetRot - dockWobbleCurrentRot) > 0.01;
+  if (!stillMoving) {
+    dockWobbleRafId = 0;
     return;
   }
-  if (dockInteractionsBound) return;
+  dockWobbleRafId = window.requestAnimationFrame(runDockWobbleFrame);
+}
+
+function ensureDockWobbleLoop() {
+  if (dockWobbleRafId) return;
+  dockWobbleRafId = window.requestAnimationFrame(runDockWobbleFrame);
+}
+
+function applyDockOrientationTargets(beta, gamma) {
+  const normalizedGamma = clamp(gamma / 45, -1, 1);
+  const normalizedBeta = clamp((beta - 22) / 55, -1, 1);
+  dockWobbleTargetX = normalizedGamma * MOBILE_DOCK_WOBBLE_MAX_X_PX;
+  dockWobbleTargetY = normalizedBeta * MOBILE_DOCK_WOBBLE_MAX_Y_PX;
+  dockWobbleTargetRot = normalizedGamma * MOBILE_DOCK_WOBBLE_MAX_ROT_DEG;
+  ensureDockWobbleLoop();
+}
+
+function onDockDeviceOrientation(event) {
+  if (!isMobileLayout()) return;
+  const beta = Number(event.beta);
+  const gamma = Number(event.gamma);
+  if (!Number.isFinite(beta) || !Number.isFinite(gamma)) return;
+  applyDockOrientationTargets(beta, gamma);
+}
+
+async function ensureDockOrientationAccess(fromGesture = false) {
+  if (!isMobileLayout() || dockOrientationListenerBound) return;
+  const OrientationCtor = window.DeviceOrientationEvent;
+  if (!OrientationCtor) return;
+
+  if (typeof OrientationCtor.requestPermission === 'function') {
+    if (!fromGesture || dockOrientationPermissionRequested) return;
+    dockOrientationPermissionRequested = true;
+    try {
+      const permission = await OrientationCtor.requestPermission();
+      if (permission !== 'granted') return;
+    } catch {
+      return;
+    }
+  }
+
+  window.addEventListener('deviceorientation', onDockDeviceOrientation, { passive: true });
+  dockOrientationListenerBound = true;
+}
+
+function teardownDockOrientationAccess() {
+  if (!dockOrientationListenerBound) return;
+  window.removeEventListener('deviceorientation', onDockDeviceOrientation);
+  dockOrientationListenerBound = false;
+  stopDockWobbleLoop();
+  resetDockWobblePose();
+}
+
+function setupDockInteractions() {
+  if (!osTaskbar) return;
+  if (dockInteractionsBound) {
+    if (isMobileLayout()) {
+      void ensureDockOrientationAccess(false);
+    } else {
+      teardownDockOrientationAccess();
+    }
+    return;
+  }
   dockPointerMoveHandler = (event) => {
+    if (event.pointerType === 'touch') {
+      if (dockActiveTouchPointerId !== event.pointerId) return;
+      const hoveredButton = event.target instanceof HTMLElement
+        ? event.target.closest('.os-taskbar-app, #os-start-button')
+        : null;
+      updateDockMagnification(event.clientX, hoveredButton instanceof HTMLButtonElement ? hoveredButton : null);
+      return;
+    }
     const hoveredButton = event.target instanceof HTMLElement
       ? event.target.closest('.os-taskbar-app, #os-start-button')
       : null;
     updateDockMagnification(event.clientX, hoveredButton instanceof HTMLButtonElement ? hoveredButton : null);
   };
   dockPointerLeaveHandler = () => {
+    if (dockActiveTouchPointerId !== null) return;
+    resetDockMagnification();
+  };
+  dockPointerDownHandler = (event) => {
+    if (event.pointerType !== 'touch') return;
+    void ensureDockOrientationAccess(true);
+    dockActiveTouchPointerId = event.pointerId;
+    const hoveredButton = event.target instanceof HTMLElement
+      ? event.target.closest('.os-taskbar-app, #os-start-button')
+      : null;
+    updateDockMagnification(event.clientX, hoveredButton instanceof HTMLButtonElement ? hoveredButton : null);
+  };
+  dockPointerUpHandler = (event) => {
+    if (event.pointerType !== 'touch') return;
+    if (dockActiveTouchPointerId !== event.pointerId) return;
+    dockActiveTouchPointerId = null;
     resetDockMagnification();
   };
 
   osTaskbar.addEventListener('pointermove', dockPointerMoveHandler);
+  osTaskbar.addEventListener('pointerdown', dockPointerDownHandler);
   osTaskbar.addEventListener('pointerleave', dockPointerLeaveHandler);
   osTaskbar.addEventListener('pointercancel', dockPointerLeaveHandler);
+  window.addEventListener('pointerup', dockPointerUpHandler, { passive: true });
+  window.addEventListener('pointercancel', dockPointerUpHandler, { passive: true });
   dockInteractionsBound = true;
+
+  if (isMobileLayout()) {
+    void ensureDockOrientationAccess(false);
+  } else {
+    teardownDockOrientationAccess();
+  }
 }
 
 function teardownDockInteractions() {
-  if (!dockInteractionsBound || !osTaskbar) return;
+  if (!dockInteractionsBound || !osTaskbar) {
+    teardownDockOrientationAccess();
+    dockActiveTouchPointerId = null;
+    resetDockMagnification();
+    return;
+  }
   if (dockPointerMoveHandler) {
     osTaskbar.removeEventListener('pointermove', dockPointerMoveHandler);
+  }
+  if (dockPointerDownHandler) {
+    osTaskbar.removeEventListener('pointerdown', dockPointerDownHandler);
   }
   if (dockPointerLeaveHandler) {
     osTaskbar.removeEventListener('pointerleave', dockPointerLeaveHandler);
     osTaskbar.removeEventListener('pointercancel', dockPointerLeaveHandler);
   }
+  if (dockPointerUpHandler) {
+    window.removeEventListener('pointerup', dockPointerUpHandler);
+    window.removeEventListener('pointercancel', dockPointerUpHandler);
+  }
   dockPointerMoveHandler = null;
+  dockPointerDownHandler = null;
+  dockPointerUpHandler = null;
   dockPointerLeaveHandler = null;
+  dockActiveTouchPointerId = null;
   dockInteractionsBound = false;
   resetDockMagnification();
+  teardownDockOrientationAccess();
 }
 
 function triggerDockBounce(button) {
@@ -1920,17 +2567,6 @@ function getPanelCodeForApp(appId) {
   return `PANEL ${String(panelNumber).padStart(3, '0')}`;
 }
 
-function getPanelCoordinateForApp(appId) {
-  const token = String(appId || 'panel');
-  let hash = 0;
-  for (let i = 0; i < token.length; i += 1) {
-    hash = ((hash * 33) + token.charCodeAt(i)) % 65536;
-  }
-  const major = 145 + (hash % 11);
-  const fractional = ((Math.floor(hash / 7) % 1000) / 1000);
-  return `${(major + fractional).toFixed(3)}%`;
-}
-
 function getPanelNavigatorForApp(appId) {
   const token = String(appId || 'panel');
   let hash = 0;
@@ -1940,6 +2576,75 @@ function getPanelNavigatorForApp(appId) {
   const navigatorId = 220 + (hash % 120);
   const suffix = String.fromCharCode(65 + (hash % 3));
   return `NAVIGATOR ${navigatorId} ${suffix}`;
+}
+
+function formatMediaTimestamp(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return '--:--';
+  const total = Math.floor(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h > 0) {
+    return `${h}:${pad2(m)}:${pad2(s)}`;
+  }
+  return `${pad2(m)}:${pad2(s)}`;
+}
+
+function formatMediaTimestampDetailed(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return '--:--.--';
+  const total = Math.floor(seconds);
+  const centiseconds = Math.floor((seconds - total) * 100);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const cs = pad2(centiseconds);
+  if (h > 0) {
+    return `${h}:${pad2(m)}:${pad2(s)}.${cs}`;
+  }
+  return `${pad2(m)}:${pad2(s)}.${cs}`;
+}
+
+function parseMediaTimestampInput(rawValue) {
+  const token = String(rawValue ?? '').trim().replace(',', '.');
+  if (!token) return Number.NaN;
+
+  if (!token.includes(':')) {
+    const secondsOnly = Number(token);
+    if (!Number.isFinite(secondsOnly) || secondsOnly < 0) return Number.NaN;
+    return secondsOnly;
+  }
+
+  const parts = token.split(':').map((part) => part.trim());
+  if (parts.some((part) => part.length === 0)) return Number.NaN;
+
+  let hours = 0;
+  let minutes = 0;
+  let secondsPart = '';
+
+  if (parts.length === 2) {
+    minutes = Number(parts[0]);
+    secondsPart = parts[1];
+  } else if (parts.length === 3) {
+    hours = Number(parts[0]);
+    minutes = Number(parts[1]);
+    secondsPart = parts[2];
+  } else {
+    return Number.NaN;
+  }
+
+  const seconds = Number(secondsPart);
+  if (
+    !Number.isFinite(hours)
+    || !Number.isFinite(minutes)
+    || !Number.isFinite(seconds)
+    || hours < 0
+    || minutes < 0
+    || seconds < 0
+  ) {
+    return Number.NaN;
+  }
+
+  return (hours * 3600) + (minutes * 60) + seconds;
 }
 
 function buildAboutSystemMarkup() {
@@ -1955,6 +2660,117 @@ function buildAboutSystemMarkup() {
     <p>Timezone: ${escapeHtml(tz)}</p>
     <p>Viewport: ${escapeHtml(viewport)}</p>
     <p>Shell Build: AC-OSR 1.0</p>
+    <div class="about-divider"></div>
+    <button class="os-app-button" id="return-to-main">\u2190 Return to Main Site</button>
+  `;
+}
+
+function buildFerroTimelineEditorMarkup() {
+  const canPublishDefault = isOwnerOperatorProfile();
+  return `
+    <section class="os-ferro-timeline-shell">
+      <header class="os-ferro-timeline-head">
+        <div class="os-ferro-timeline-title">Ferrofluid Timeline Editor</div>
+        <div class="os-ferro-timeline-subtitle">Spin choreography and timing controls synced to BGM.</div>
+      </header>
+
+      <section class="os-ferro-transport">
+        <div class="os-ferro-transport-left">
+          <span class="os-ferro-time-readout">00:00.00 / --:--.--</span>
+          <div class="os-ferro-jump-controls">
+            <button type="button" class="os-ferro-jump" data-jump="-${FERRO_SCRUB_JUMP_LARGE_SEC}">-${FERRO_SCRUB_JUMP_LARGE_SEC}s</button>
+            <button type="button" class="os-ferro-jump" data-jump="-${FERRO_SCRUB_JUMP_SMALL_SEC}">-${FERRO_SCRUB_JUMP_SMALL_SEC}s</button>
+            <button type="button" class="os-ferro-jump os-ferro-jump-pause" data-control="pause">Pause</button>
+            <button type="button" class="os-ferro-jump" data-jump="${FERRO_SCRUB_JUMP_SMALL_SEC}">+${FERRO_SCRUB_JUMP_SMALL_SEC}s</button>
+            <button type="button" class="os-ferro-jump" data-jump="${FERRO_SCRUB_JUMP_LARGE_SEC}">+${FERRO_SCRUB_JUMP_LARGE_SEC}s</button>
+          </div>
+        </div>
+        <div class="os-ferro-transport-right">
+          <button type="button" class="os-ferro-mark-in-btn">Set In</button>
+          <output class="os-ferro-marker os-ferro-marker-in">--:--.--</output>
+          <button type="button" class="os-ferro-mark-out-btn">Set Out</button>
+          <output class="os-ferro-marker os-ferro-marker-out">--:--.--</output>
+        </div>
+      </section>
+
+      <div class="os-ferro-scrub-shell os-ferro-scrub-shell--timeline">
+        <input id="os-ferro-scrub" class="os-ferro-scrub" type="range" min="0" max="1" step="${FERRO_SCRUB_FINE_STEP_SEC}" value="0" />
+      </div>
+
+      <section class="os-ferro-workspace">
+        <section class="os-ferro-track-panel">
+          <div class="os-ferro-track-controls">
+            <button type="button" class="os-ferro-zoom-btn os-ferro-zoom-out" aria-label="Zoom out timeline">-</button>
+            <label class="os-ferro-zoom-wrap">
+              <span>Zoom</span>
+              <input
+                class="os-ferro-zoom-range"
+                type="range"
+                min="${FERRO_TIMELINE_ZOOM_MIN}"
+                max="${FERRO_TIMELINE_ZOOM_MAX}"
+                step="${FERRO_TIMELINE_ZOOM_STEP}"
+                value="${FERRO_TIMELINE_ZOOM_MIN}"
+              />
+            </label>
+            <button type="button" class="os-ferro-zoom-btn os-ferro-zoom-in" aria-label="Zoom in timeline">+</button>
+            <output class="os-ferro-zoom-readout">100%</output>
+          </div>
+          <div class="os-ferro-track-ruler"></div>
+          <div class="os-ferro-track-lane"></div>
+        </section>
+
+        <section class="os-ferro-inspector">
+          <div class="os-ferro-inspector-head">
+            <span class="os-ferro-inspector-title">Selected Segment</span>
+            <span class="os-ferro-selected-id">None</span>
+          </div>
+          <div class="os-ferro-preview-panel">
+            <div class="os-ferro-preview-head">
+              <span class="os-ferro-preview-title">LIVE ORB REACTION</span>
+              <span class="os-ferro-preview-time">--:--.--</span>
+            </div>
+            <canvas class="os-ferro-preview-canvas" width="420" height="260"></canvas>
+          </div>
+          <div class="os-ferro-inspector-grid">
+            <label><span>In</span><input class="os-ferro-field-start" type="text" inputmode="decimal" spellcheck="false" placeholder="mm:ss.xx" value="00:00.00" /></label>
+            <label><span>Out</span><input class="os-ferro-field-end" type="text" inputmode="decimal" spellcheck="false" placeholder="mm:ss.xx" value="00:01.00" /></label>
+            <label><span>Direction</span>
+              <select class="os-ferro-field-direction">
+                <option value="cw">CW</option>
+                <option value="ccw">CCW</option>
+              </select>
+            </label>
+            <label><span>Easing</span>
+              <select class="os-ferro-field-easing">
+                <option value="linear">Linear</option>
+                <option value="ease-in">Ease In</option>
+                <option value="ease-out">Ease Out</option>
+                <option value="ease-in-out">Ease In/Out</option>
+              </select>
+            </label>
+            <label><span>Speed In</span><input class="os-ferro-field-speed-start" type="number" min="0" max="${FERRO_SEGMENT_MAX_SPEED}" step="0.1" value="1.0" /></label>
+            <label><span>Speed Out</span><input class="os-ferro-field-speed-end" type="number" min="0" max="${FERRO_SEGMENT_MAX_SPEED}" step="0.1" value="1.0" /></label>
+            <label><span>Stops</span>
+              <select class="os-ferro-field-stop-mode">
+                <option value="none">None</option>
+                <option value="intermittent">Intermittent</option>
+              </select>
+            </label>
+            <label><span>Stop Cycle</span><input class="os-ferro-field-stop-cycle" type="number" min="0.05" max="6" step="0.01" value="0.20" /></label>
+            <label><span>Stop Hold</span><input class="os-ferro-field-stop-duration" type="number" min="0" max="5.99" step="0.01" value="0.08" /></label>
+            <label class="os-ferro-field-enabled"><span>Enabled</span><input class="os-ferro-field-enabled-toggle" type="checkbox" checked /></label>
+          </div>
+          <div class="os-ferro-inspector-actions">
+            <button type="button" class="os-ferro-add-segment">Add Segment</button>
+            <button type="button" class="os-ferro-segment-delete">Delete Selected</button>
+            <button type="button" class="os-ferro-reset-segments">Reset</button>
+            <button type="button" class="os-ferro-save-btn">Save</button>
+            <button type="button" class="os-ferro-save-default-btn" ${canPublishDefault ? '' : 'disabled'}>Save As Default</button>
+            <span class="os-ferro-save-status">Timeline ready.</span>
+          </div>
+        </section>
+      </section>
+    </section>
   `;
 }
 
@@ -1998,6 +2814,11 @@ function buildWindowBodyMarkup(appId) {
   }
 
   if (appId === 'settings') {
+    const volumePercent = Math.round(clamp(
+      Number(osSettings.musicVolumePercent),
+      BG_MUSIC_VOLUME_MIN_PERCENT,
+      BG_MUSIC_VOLUME_MAX_PERCENT,
+    ));
     return `
       <h3>Settings</h3>
       <div class="os-setting-row">
@@ -2007,6 +2828,13 @@ function buildWindowBodyMarkup(appId) {
       <div class="os-setting-row">
         <span>Motion intensity</span>
         <input class="os-setting-intensity" type="range" min="0" max="1" step="0.01" value="${osSettings.motionIntensity.toFixed(2)}" />
+      </div>
+      <div class="os-setting-row">
+        <span>Music volume</span>
+        <div class="os-setting-volume-control">
+          <input class="os-setting-volume" type="range" min="${BG_MUSIC_VOLUME_MIN_PERCENT}" max="${BG_MUSIC_VOLUME_MAX_PERCENT}" step="1" value="${volumePercent}" />
+          <output class="os-setting-volume-value">${volumePercent}%</output>
+        </div>
       </div>
       <div class="os-setting-row">
         <span>Taskbar style</span>
@@ -2022,6 +2850,10 @@ function buildWindowBodyMarkup(appId) {
         </div>
       </div>
       <div class="os-setting-row">
+        <span>Theme mode</span>
+        <span class="os-setting-theme-label">Chrome 2000</span>
+      </div>
+      <div class="os-setting-row">
         <span>Desktop layout</span>
         <button class="os-reset-icons" type="button">Reset icon positions</button>
       </div>
@@ -2031,7 +2863,7 @@ function buildWindowBodyMarkup(appId) {
   if (appId === 'ferro-control') {
     return `
       <h3>Ferrofluid Control</h3>
-      <p>Hover influence is always enabled.</p>
+      <p>Hover influence is always enabled. Use Timeline Editor for keyframed spin animation.</p>
       <div class="os-setting-row">
         <label for="os-ferro-orbit">Enable drag spin/orbit</label>
         <input id="os-ferro-orbit" class="os-ferro-orbit-toggle" type="checkbox" ${osSettings.ferroOrbitEnabled ? 'checked' : ''} />
@@ -2040,7 +2872,19 @@ function buildWindowBodyMarkup(appId) {
         <label for="os-ferro-zoom">Enable wheel zoom</label>
         <input id="os-ferro-zoom" class="os-ferro-zoom-toggle" type="checkbox" ${osSettings.ferroZoomEnabled ? 'checked' : ''} />
       </div>
+      <div class="os-setting-row">
+        <label for="os-ferro-live-reaction">LIVE ORB REACTION</label>
+        <input id="os-ferro-live-reaction" class="os-ferro-live-reaction-toggle" type="checkbox" ${osSettings.liveOrbReactionEnabled ? 'checked' : ''} />
+      </div>
+      <div class="os-setting-row">
+        <span>Timeline animation editor</span>
+        <button class="os-open-ferro-timeline" type="button">Open Timeline Editor</button>
+      </div>
     `;
+  }
+
+  if (appId === 'ferro-timeline') {
+    return buildFerroTimelineEditorMarkup();
   }
 
   if (appId === 'about-system') {
@@ -2050,7 +2894,821 @@ function buildWindowBodyMarkup(appId) {
   return '<p>Module unavailable.</p>';
 }
 
-function hydrateWindowBody(appId, bodyEl) {
+function hydrateFerroTimelineEditor(bodyEl, win = null) {
+  if (!(bodyEl instanceof HTMLElement)) return;
+
+  const scrubSlider = bodyEl.querySelector('.os-ferro-scrub');
+  const scrubReadout = bodyEl.querySelector('.os-ferro-time-readout');
+  const markInButton = bodyEl.querySelector('.os-ferro-mark-in-btn');
+  const markOutButton = bodyEl.querySelector('.os-ferro-mark-out-btn');
+  const markerInLabel = bodyEl.querySelector('.os-ferro-marker-in');
+  const markerOutLabel = bodyEl.querySelector('.os-ferro-marker-out');
+  const addSegmentButton = bodyEl.querySelector('.os-ferro-add-segment');
+  const resetSegmentsButton = bodyEl.querySelector('.os-ferro-reset-segments');
+  const saveButton = bodyEl.querySelector('.os-ferro-save-btn');
+  const saveDefaultButton = bodyEl.querySelector('.os-ferro-save-default-btn');
+  const deleteSelectedButton = bodyEl.querySelector('.os-ferro-segment-delete');
+  const saveStatus = bodyEl.querySelector('.os-ferro-save-status');
+  const selectedIdLabel = bodyEl.querySelector('.os-ferro-selected-id');
+  const trackLane = bodyEl.querySelector('.os-ferro-track-lane');
+  const trackRuler = bodyEl.querySelector('.os-ferro-track-ruler');
+  const zoomInButton = bodyEl.querySelector('.os-ferro-zoom-in');
+  const zoomOutButton = bodyEl.querySelector('.os-ferro-zoom-out');
+  const zoomRange = bodyEl.querySelector('.os-ferro-zoom-range');
+  const zoomReadout = bodyEl.querySelector('.os-ferro-zoom-readout');
+  const jumpButtons = bodyEl.querySelectorAll('.os-ferro-jump');
+  const pauseToggleButton = bodyEl.querySelector('.os-ferro-jump-pause');
+  const previewCanvas = bodyEl.querySelector('.os-ferro-preview-canvas');
+  const previewTimeLabel = bodyEl.querySelector('.os-ferro-preview-time');
+  const fieldStart = bodyEl.querySelector('.os-ferro-field-start');
+  const fieldEnd = bodyEl.querySelector('.os-ferro-field-end');
+  const fieldDirection = bodyEl.querySelector('.os-ferro-field-direction');
+  const fieldSpeedStart = bodyEl.querySelector('.os-ferro-field-speed-start');
+  const fieldSpeedEnd = bodyEl.querySelector('.os-ferro-field-speed-end');
+  const fieldEasing = bodyEl.querySelector('.os-ferro-field-easing');
+  const fieldStopMode = bodyEl.querySelector('.os-ferro-field-stop-mode');
+  const fieldStopCycle = bodyEl.querySelector('.os-ferro-field-stop-cycle');
+  const fieldStopDuration = bodyEl.querySelector('.os-ferro-field-stop-duration');
+  const fieldEnabled = bodyEl.querySelector('.os-ferro-field-enabled-toggle');
+
+  if (
+    !(scrubSlider instanceof HTMLInputElement)
+    || !(scrubReadout instanceof HTMLElement)
+    || !(trackLane instanceof HTMLElement)
+    || !(trackRuler instanceof HTMLElement)
+  ) {
+    return;
+  }
+
+  ensureBackgroundAudioChain();
+  if (!bgSpinTimeline.length) {
+    loadFerroSpinTimeline();
+  }
+  if (previewCanvas instanceof HTMLCanvasElement) {
+    ferroTimelinePreviewCanvas = previewCanvas;
+    ferroTimelinePreviewCtx = null;
+  }
+  if (previewTimeLabel instanceof HTMLElement) {
+    ferroTimelinePreviewTimeLabel = previewTimeLabel;
+  }
+
+  let isScrubbing = false;
+  let markerInSec = 0;
+  let markerOutSec = Math.max(2, FERRO_SEGMENT_MIN_SPAN_SEC);
+  let statusTimeoutId = 0;
+  let selectedSegmentId = bgSpinTimeline[0]?.id || '';
+  let playheadEl = null;
+  let railEl = null;
+  let timelineZoom = FERRO_TIMELINE_ZOOM_MIN;
+  let timelineScrollSyncLocked = false;
+  let clipDragState = null;
+
+  const getDuration = () => (
+    bgMusicEl && Number.isFinite(bgMusicEl.duration) && bgMusicEl.duration > 0
+      ? Number(bgMusicEl.duration)
+      : 0
+  );
+
+  const getTimelineBound = () => {
+    const fromTimeline = getSpinTimelineMaxEndSec(bgSpinTimeline);
+    return Math.max(1, fromTimeline, markerInSec, markerOutSec);
+  };
+
+  const getSliderMax = () => {
+    const durationSec = getDuration();
+    return durationSec > 0 ? durationSec : getTimelineBound();
+  };
+
+  const getTimelineViewportWidthPx = () => Math.max(
+    220,
+    Math.round(trackLane.clientWidth || trackRuler.clientWidth || bodyEl.clientWidth || 420),
+  );
+
+  const getTimelineContentWidthPx = () => Math.max(
+    getTimelineViewportWidthPx(),
+    Math.round(getTimelineViewportWidthPx() * timelineZoom),
+  );
+
+  const getTrackScrollRatio = () => {
+    const laneMaxScroll = Math.max(0, trackLane.scrollWidth - trackLane.clientWidth);
+    if (laneMaxScroll <= 0) return 0;
+    return clamp(trackLane.scrollLeft / laneMaxScroll, 0, 1);
+  };
+
+  const setTrackScrollRatio = (ratio) => {
+    const clampedRatio = clamp(Number(ratio) || 0, 0, 1);
+    const laneMaxScroll = Math.max(0, trackLane.scrollWidth - trackLane.clientWidth);
+    const nextScroll = laneMaxScroll * clampedRatio;
+    timelineScrollSyncLocked = true;
+    trackLane.scrollLeft = nextScroll;
+    trackRuler.scrollLeft = nextScroll;
+    timelineScrollSyncLocked = false;
+  };
+
+  const syncTrackScroll = (source, target) => {
+    if (!(source instanceof HTMLElement) || !(target instanceof HTMLElement)) return;
+    if (timelineScrollSyncLocked) return;
+    timelineScrollSyncLocked = true;
+    target.scrollLeft = source.scrollLeft;
+    timelineScrollSyncLocked = false;
+  };
+
+  const syncZoomReadout = () => {
+    if (zoomRange instanceof HTMLInputElement) {
+      zoomRange.value = timelineZoom.toFixed(2);
+    }
+    if (zoomReadout instanceof HTMLOutputElement || zoomReadout instanceof HTMLElement) {
+      zoomReadout.textContent = `${Math.round(timelineZoom * 100)}%`;
+    }
+  };
+
+  const setSaveStatus = (message, tone = 'info') => {
+    if (!(saveStatus instanceof HTMLElement)) return;
+    saveStatus.textContent = message;
+    saveStatus.dataset.tone = tone;
+    if (statusTimeoutId) {
+      window.clearTimeout(statusTimeoutId);
+      statusTimeoutId = 0;
+    }
+    if (tone !== 'error') {
+      statusTimeoutId = window.setTimeout(() => {
+        statusTimeoutId = 0;
+        if (saveStatus instanceof HTMLElement) {
+          saveStatus.textContent = 'Timeline ready.';
+          saveStatus.dataset.tone = 'info';
+        }
+      }, 2200);
+    }
+  };
+
+  const normalizeMarkers = () => {
+    const maxSec = getSliderMax();
+    markerInSec = clamp(markerInSec, 0, maxSec);
+    markerOutSec = clamp(markerOutSec, 0, maxSec);
+    if (markerOutSec <= markerInSec) {
+      markerOutSec = clamp(markerInSec + FERRO_SEGMENT_MIN_SPAN_SEC, 0, maxSec);
+    }
+  };
+
+  const syncMarkerReadout = () => {
+    normalizeMarkers();
+    if (markerInLabel instanceof HTMLOutputElement || markerInLabel instanceof HTMLElement) {
+      markerInLabel.textContent = formatMediaTimestampDetailed(markerInSec);
+    }
+    if (markerOutLabel instanceof HTMLOutputElement || markerOutLabel instanceof HTMLElement) {
+      markerOutLabel.textContent = formatMediaTimestampDetailed(markerOutSec);
+    }
+  };
+
+  const getSelectedSegmentIndex = () => bgSpinTimeline.findIndex((segment) => segment.id === selectedSegmentId);
+
+  const getSelectedSegment = () => {
+    const index = getSelectedSegmentIndex();
+    return index >= 0 ? bgSpinTimeline[index] : null;
+  };
+
+  const setReadout = (currentSec, durationSec) => {
+    scrubReadout.textContent = `${formatMediaTimestampDetailed(currentSec)} / ${durationSec > 0 ? formatMediaTimestampDetailed(durationSec) : '--:--.--'}`;
+  };
+
+  const syncPauseButton = () => {
+    if (!(pauseToggleButton instanceof HTMLButtonElement)) return;
+    const playing = Boolean(bgMusicEl && !bgMusicEl.paused);
+    pauseToggleButton.textContent = playing ? 'Pause' : 'Play';
+    pauseToggleButton.dataset.state = playing ? 'playing' : 'paused';
+    pauseToggleButton.setAttribute('aria-label', playing ? 'Pause playback' : 'Resume playback');
+  };
+
+  const setPlayheadPosition = (timeSec) => {
+    if (!(playheadEl instanceof HTMLElement)) return;
+    const maxSec = Math.max(getSliderMax(), 1);
+    const leftPercent = clamp((timeSec / maxSec) * 100, 0, 100);
+    playheadEl.style.left = `${leftPercent.toFixed(3)}%`;
+  };
+
+  const scrubTo = (nextTimeSec, { forceAudio = true } = {}) => {
+    const maxSec = getSliderMax();
+    const clampedTime = clamp(nextTimeSec, 0, maxSec);
+    scrubSlider.value = String(clampedTime);
+    if (forceAudio && bgMusicEl instanceof HTMLAudioElement) {
+      bgMusicEl.currentTime = clampedTime;
+    }
+    setPlayheadPosition(clampedTime);
+  };
+
+  const syncInspectorFromSelection = () => {
+    const segment = getSelectedSegment();
+    if (selectedIdLabel instanceof HTMLElement) {
+      selectedIdLabel.textContent = segment ? segment.id : 'None';
+    }
+    if (
+      !(fieldStart instanceof HTMLInputElement)
+      || !(fieldEnd instanceof HTMLInputElement)
+      || !(fieldDirection instanceof HTMLSelectElement)
+      || !(fieldSpeedStart instanceof HTMLInputElement)
+      || !(fieldSpeedEnd instanceof HTMLInputElement)
+      || !(fieldEasing instanceof HTMLSelectElement)
+      || !(fieldStopMode instanceof HTMLSelectElement)
+      || !(fieldStopCycle instanceof HTMLInputElement)
+      || !(fieldStopDuration instanceof HTMLInputElement)
+      || !(fieldEnabled instanceof HTMLInputElement)
+    ) {
+      return;
+    }
+
+    const disable = !segment;
+    for (const field of [
+      fieldStart,
+      fieldEnd,
+      fieldDirection,
+      fieldSpeedStart,
+      fieldSpeedEnd,
+      fieldEasing,
+      fieldStopMode,
+      fieldStopCycle,
+      fieldStopDuration,
+      fieldEnabled,
+    ]) {
+      field.disabled = disable;
+    }
+    if (deleteSelectedButton instanceof HTMLButtonElement) {
+      deleteSelectedButton.disabled = disable;
+    }
+    if (!segment) return;
+
+    fieldStart.value = formatMediaTimestampDetailed(segment.startSec);
+    fieldEnd.value = formatMediaTimestampDetailed(segment.endSec);
+    fieldDirection.value = segment.direction;
+    fieldSpeedStart.value = segment.speedStart.toFixed(1);
+    fieldSpeedEnd.value = segment.speedEnd.toFixed(1);
+    fieldEasing.value = segment.easing;
+    fieldStopMode.value = segment.stopMode;
+    fieldStopCycle.value = segment.stopCycleSec.toFixed(2);
+    fieldStopDuration.value = segment.stopDurationSec.toFixed(2);
+    fieldEnabled.checked = Boolean(segment.enabled);
+  };
+
+  const renderTrackRuler = () => {
+    const maxSec = Math.max(getSliderMax(), 1);
+    const contentWidthPx = getTimelineContentWidthPx();
+    trackRuler.textContent = '';
+    const rulerRail = document.createElement('div');
+    rulerRail.className = 'os-ferro-track-ruler-rail';
+    rulerRail.style.width = `${contentWidthPx}px`;
+    const marks = 8;
+    for (let i = 0; i <= marks; i += 1) {
+      const sec = (maxSec * i) / marks;
+      const markEl = document.createElement('span');
+      markEl.className = 'os-ferro-ruler-mark';
+      markEl.style.left = `${((i / marks) * 100).toFixed(3)}%`;
+      markEl.textContent = formatMediaTimestamp(sec);
+      rulerRail.appendChild(markEl);
+    }
+    trackRuler.appendChild(rulerRail);
+  };
+
+  const renderTrackLane = () => {
+    const currentTime = Number(scrubSlider.value) || 0;
+    const maxSec = Math.max(getSliderMax(), 1);
+    const contentWidthPx = getTimelineContentWidthPx();
+    trackLane.textContent = '';
+
+    const rail = document.createElement('div');
+    rail.className = 'os-ferro-track-rail';
+    rail.style.width = `${contentWidthPx}px`;
+    trackLane.appendChild(rail);
+    railEl = rail;
+
+    const applyClipGeometry = (clipEl, startSec, endSec) => {
+      const startPct = clamp((startSec / maxSec) * 100, 0, 100);
+      const widthPct = clamp(((endSec - startSec) / maxSec) * 100, 0.8, 100);
+      clipEl.style.left = `${startPct.toFixed(3)}%`;
+      clipEl.style.width = `${widthPct.toFixed(3)}%`;
+      clipEl.title = `${formatMediaTimestampDetailed(startSec)} - ${formatMediaTimestampDetailed(endSec)}`;
+    };
+
+    const stopClipDrag = () => {
+      if (!clipDragState) return;
+      clipDragState.clip.classList.remove('is-dragging');
+      try {
+        clipDragState.clip.releasePointerCapture?.(clipDragState.pointerId);
+      } catch {
+        // optional pointer capture support
+      }
+      if (clipDragState.moved) {
+        bgSpinTimeline = sanitizeSpinTimeline(bgSpinTimeline);
+        renderTimelineEditor();
+        syncScrubUi();
+        const statusText = clipDragState.mode === 'move'
+          ? 'Segment moved. Save to persist.'
+          : 'Segment duration updated. Save to persist.';
+        setSaveStatus(statusText);
+      } else {
+        renderTrackLane();
+      }
+      clipDragState = null;
+    };
+
+    for (const segment of bgSpinTimeline) {
+      const clip = document.createElement('button');
+      clip.type = 'button';
+      clip.className = 'os-ferro-track-clip';
+      if (segment.id === selectedSegmentId) {
+        clip.classList.add('is-selected');
+      }
+      if (!segment.enabled) {
+        clip.classList.add('is-disabled');
+      }
+      clip.textContent = `${segment.direction.toUpperCase()} ${segment.speedStart.toFixed(0)}->${segment.speedEnd.toFixed(0)}`;
+      applyClipGeometry(clip, segment.startSec, segment.endSec);
+
+      const startHandle = document.createElement('span');
+      startHandle.className = 'os-ferro-track-handle is-start';
+      startHandle.setAttribute('aria-hidden', 'true');
+      const endHandle = document.createElement('span');
+      endHandle.className = 'os-ferro-track-handle is-end';
+      endHandle.setAttribute('aria-hidden', 'true');
+      clip.append(startHandle, endHandle);
+
+      const beginClipPointerDrag = (event, mode) => {
+        if (!(event instanceof PointerEvent)) return;
+        selectedSegmentId = segment.id;
+        syncInspectorFromSelection();
+        clipDragState = {
+          mode,
+          pointerId: event.pointerId,
+          clip,
+          segmentId: segment.id,
+          startClientX: event.clientX,
+          initialStartSec: segment.startSec,
+          initialEndSec: segment.endSec,
+          moved: false,
+        };
+        clip.classList.add('is-dragging');
+        try {
+          clip.setPointerCapture?.(event.pointerId);
+        } catch {
+          // optional pointer capture support
+        }
+        event.preventDefault();
+      };
+
+      clip.addEventListener('pointerdown', (event) => {
+        beginClipPointerDrag(event, 'move');
+      });
+      startHandle.addEventListener('pointerdown', (event) => {
+        beginClipPointerDrag(event, 'resize-start');
+        event.stopPropagation();
+      });
+      endHandle.addEventListener('pointerdown', (event) => {
+        beginClipPointerDrag(event, 'resize-end');
+        event.stopPropagation();
+      });
+      clip.addEventListener('pointermove', (event) => {
+        if (!(event instanceof PointerEvent)) return;
+        if (!clipDragState || clipDragState.segmentId !== segment.id) return;
+        if (clipDragState.pointerId !== event.pointerId) return;
+        const railWidth = Math.max(1, rail.clientWidth);
+        const deltaPx = event.clientX - clipDragState.startClientX;
+        if (!clipDragState.moved && Math.abs(deltaPx) <= 1) return;
+        clipDragState.moved = true;
+        const deltaSec = (deltaPx / railWidth) * maxSec;
+        const initialSpanSec = Math.max(
+          FERRO_SEGMENT_MIN_SPAN_SEC,
+          clipDragState.initialEndSec - clipDragState.initialStartSec,
+        );
+        let nextStartSec = clipDragState.initialStartSec;
+        let nextEndSec = clipDragState.initialEndSec;
+        if (clipDragState.mode === 'resize-start') {
+          const maxStartSec = Math.max(0, clipDragState.initialEndSec - FERRO_SEGMENT_MIN_SPAN_SEC);
+          nextStartSec = clamp(clipDragState.initialStartSec + deltaSec, 0, maxStartSec);
+        } else if (clipDragState.mode === 'resize-end') {
+          const minEndSec = clipDragState.initialStartSec + FERRO_SEGMENT_MIN_SPAN_SEC;
+          nextEndSec = clamp(clipDragState.initialEndSec + deltaSec, minEndSec, maxSec);
+        } else {
+          const maxStartSec = Math.max(0, maxSec - initialSpanSec);
+          nextStartSec = clamp(clipDragState.initialStartSec + deltaSec, 0, maxStartSec);
+          nextEndSec = nextStartSec + initialSpanSec;
+        }
+        segment.startSec = nextStartSec;
+        segment.endSec = nextEndSec;
+        applyClipGeometry(clip, nextStartSec, nextEndSec);
+        if (selectedSegmentId === segment.id) {
+          syncInspectorFromSelection();
+        }
+      });
+      clip.addEventListener('pointerup', (event) => {
+        if (!(event instanceof PointerEvent)) return;
+        if (!clipDragState || clipDragState.pointerId !== event.pointerId) return;
+        stopClipDrag();
+      });
+      clip.addEventListener('pointercancel', (event) => {
+        if (!(event instanceof PointerEvent)) return;
+        if (!clipDragState || clipDragState.pointerId !== event.pointerId) return;
+        stopClipDrag();
+      });
+      rail.appendChild(clip);
+    }
+
+    playheadEl = document.createElement('div');
+    playheadEl.className = 'os-ferro-track-playhead';
+    rail.appendChild(playheadEl);
+    setPlayheadPosition(currentTime);
+  };
+
+  const renderTimelineEditor = ({ preserveScroll = true } = {}) => {
+    const lastScrollRatio = preserveScroll ? getTrackScrollRatio() : 0;
+    bgSpinTimeline = sanitizeSpinTimeline(bgSpinTimeline);
+    if (!bgSpinTimeline.length) {
+      selectedSegmentId = '';
+    } else if (!bgSpinTimeline.some((segment) => segment.id === selectedSegmentId)) {
+      selectedSegmentId = bgSpinTimeline[0].id;
+    }
+    renderTrackRuler();
+    renderTrackLane();
+    if (preserveScroll) {
+      setTrackScrollRatio(lastScrollRatio);
+    }
+    syncInspectorFromSelection();
+    syncMarkerReadout();
+    syncZoomReadout();
+  };
+
+  const setTimelineZoom = (nextZoom, options = {}) => {
+    const clampedZoom = clamp(
+      Number(nextZoom) || FERRO_TIMELINE_ZOOM_MIN,
+      FERRO_TIMELINE_ZOOM_MIN,
+      FERRO_TIMELINE_ZOOM_MAX,
+    );
+    const focusTimeSec = Number.isFinite(options.focusTimeSec)
+      ? Number(options.focusTimeSec)
+      : (Number(scrubSlider.value) || 0);
+    timelineZoom = clampedZoom;
+    renderTimelineEditor({ preserveScroll: false });
+    const maxSec = Math.max(getSliderMax(), 1);
+    const focusRatio = clamp(focusTimeSec / maxSec, 0, 1);
+    const laneMaxScroll = Math.max(0, trackLane.scrollWidth - trackLane.clientWidth);
+    const targetScroll = clamp((focusRatio * trackLane.scrollWidth) - (trackLane.clientWidth * 0.5), 0, laneMaxScroll);
+    timelineScrollSyncLocked = true;
+    trackLane.scrollLeft = targetScroll;
+    trackRuler.scrollLeft = targetScroll;
+    timelineScrollSyncLocked = false;
+    setPlayheadPosition(focusTimeSec);
+    syncZoomReadout();
+  };
+
+  const applyInspectorChanges = () => {
+    const index = getSelectedSegmentIndex();
+    if (index < 0) return;
+    if (
+      !(fieldStart instanceof HTMLInputElement)
+      || !(fieldEnd instanceof HTMLInputElement)
+      || !(fieldDirection instanceof HTMLSelectElement)
+      || !(fieldSpeedStart instanceof HTMLInputElement)
+      || !(fieldSpeedEnd instanceof HTMLInputElement)
+      || !(fieldEasing instanceof HTMLSelectElement)
+      || !(fieldStopMode instanceof HTMLSelectElement)
+      || !(fieldStopCycle instanceof HTMLInputElement)
+      || !(fieldStopDuration instanceof HTMLInputElement)
+      || !(fieldEnabled instanceof HTMLInputElement)
+    ) {
+      return;
+    }
+    const parsedStartSec = parseMediaTimestampInput(fieldStart.value);
+    const parsedEndSec = parseMediaTimestampInput(fieldEnd.value);
+    if (!Number.isFinite(parsedStartSec) || !Number.isFinite(parsedEndSec)) {
+      setSaveStatus('Invalid timeline time. Use mm:ss.xx or hh:mm:ss.xx.', 'error');
+      return;
+    }
+
+    const updatedSegment = sanitizeSpinSegment({
+      ...bgSpinTimeline[index],
+      startSec: parsedStartSec,
+      endSec: parsedEndSec,
+      direction: fieldDirection.value,
+      speedStart: Number(fieldSpeedStart.value),
+      speedEnd: Number(fieldSpeedEnd.value),
+      easing: fieldEasing.value,
+      stopMode: fieldStopMode.value,
+      stopCycleSec: Number(fieldStopCycle.value),
+      stopDurationSec: Number(fieldStopDuration.value),
+      enabled: fieldEnabled.checked,
+    }, index);
+
+    if (!updatedSegment) return;
+    bgSpinTimeline[index] = updatedSegment;
+    bgSpinTimeline = sanitizeSpinTimeline(bgSpinTimeline);
+    selectedSegmentId = updatedSegment.id;
+    renderTimelineEditor();
+  };
+
+  const syncScrubUi = () => {
+    const durationSec = getDuration();
+    const sliderMax = getSliderMax();
+    const audioTimeSec = bgMusicEl ? Math.max(0, Number(bgMusicEl.currentTime) || 0) : 0;
+    const sliderTimeSec = Number(scrubSlider.value) || 0;
+    const shownTimeSec = isScrubbing ? sliderTimeSec : audioTimeSec;
+
+    scrubSlider.disabled = false;
+    scrubSlider.step = String(FERRO_SCRUB_FINE_STEP_SEC);
+    scrubSlider.max = String(sliderMax);
+    if (!isScrubbing) {
+      scrubSlider.value = String(clamp(audioTimeSec, 0, sliderMax));
+    }
+    setReadout(shownTimeSec, durationSec > 0 ? durationSec : sliderMax);
+    setPlayheadPosition(shownTimeSec);
+    syncMarkerReadout();
+    syncPauseButton();
+    syncFerroTimelinePreview(shownTimeSec, { drawFrame: false });
+  };
+
+  const applyScrubToAudio = () => {
+    if (!(bgMusicEl instanceof HTMLAudioElement)) return;
+    const durationSec = getSliderMax();
+    const nextTime = Number(scrubSlider.value) || 0;
+    bgMusicEl.currentTime = durationSec > 0 ? clamp(nextTime, 0, durationSec) : Math.max(0, nextTime);
+  };
+
+  scrubSlider.addEventListener('pointerdown', () => {
+    isScrubbing = true;
+    void startBackgroundAudio();
+  });
+  scrubSlider.addEventListener('input', () => {
+    isScrubbing = true;
+    applyScrubToAudio();
+    syncScrubUi();
+  });
+  scrubSlider.addEventListener('keydown', (event) => {
+    if (!(event instanceof KeyboardEvent)) return;
+    if (event.key !== 'PageUp' && event.key !== 'PageDown') return;
+    const delta = event.key === 'PageUp' ? FERRO_SCRUB_PAGE_STEP_SEC : -FERRO_SCRUB_PAGE_STEP_SEC;
+    scrubTo((Number(scrubSlider.value) || 0) + delta, { forceAudio: true });
+    syncScrubUi();
+    event.preventDefault();
+  });
+  scrubSlider.addEventListener('change', () => {
+    applyScrubToAudio();
+    isScrubbing = false;
+    syncScrubUi();
+  });
+  scrubSlider.addEventListener('pointerup', () => {
+    isScrubbing = false;
+    syncScrubUi();
+  });
+  scrubSlider.addEventListener('pointercancel', () => {
+    isScrubbing = false;
+    syncScrubUi();
+  });
+
+  trackLane.addEventListener('scroll', () => {
+    syncTrackScroll(trackLane, trackRuler);
+  });
+  trackRuler.addEventListener('scroll', () => {
+    syncTrackScroll(trackRuler, trackLane);
+  });
+
+  if (zoomRange instanceof HTMLInputElement) {
+    zoomRange.min = String(FERRO_TIMELINE_ZOOM_MIN);
+    zoomRange.max = String(FERRO_TIMELINE_ZOOM_MAX);
+    zoomRange.step = String(FERRO_TIMELINE_ZOOM_STEP);
+    zoomRange.value = String(FERRO_TIMELINE_ZOOM_MIN);
+    zoomRange.addEventListener('input', () => {
+      const focusSec = Number(scrubSlider.value) || 0;
+      setTimelineZoom(Number(zoomRange.value), { focusTimeSec: focusSec });
+    });
+  }
+
+  if (zoomInButton instanceof HTMLButtonElement) {
+    zoomInButton.addEventListener('click', () => {
+      const focusSec = Number(scrubSlider.value) || 0;
+      setTimelineZoom(timelineZoom + FERRO_TIMELINE_ZOOM_STEP, { focusTimeSec: focusSec });
+    });
+  }
+
+  if (zoomOutButton instanceof HTMLButtonElement) {
+    zoomOutButton.addEventListener('click', () => {
+      const focusSec = Number(scrubSlider.value) || 0;
+      setTimelineZoom(timelineZoom - FERRO_TIMELINE_ZOOM_STEP, { focusTimeSec: focusSec });
+    });
+  }
+
+  trackLane.addEventListener('wheel', (event) => {
+    if (!(event instanceof WheelEvent)) return;
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    const direction = event.deltaY < 0 ? 1 : -1;
+    const focusSec = Number(scrubSlider.value) || 0;
+    setTimelineZoom(timelineZoom + (direction * FERRO_TIMELINE_ZOOM_STEP), { focusTimeSec: focusSec });
+  }, { passive: false });
+
+  if (pauseToggleButton instanceof HTMLButtonElement) {
+    pauseToggleButton.addEventListener('click', async () => {
+      ensureBackgroundAudioChain();
+      if (!(bgMusicEl instanceof HTMLAudioElement)) {
+        syncPauseButton();
+        return;
+      }
+      if (bgMusicEl.paused) {
+        await startBackgroundAudio();
+      } else {
+        bgMusicEl.pause();
+      }
+      syncScrubUi();
+    });
+  }
+
+  for (const jumpButton of jumpButtons) {
+    if (!(jumpButton instanceof HTMLButtonElement)) continue;
+    jumpButton.addEventListener('click', () => {
+      const delta = Number(jumpButton.dataset.jump);
+      if (!Number.isFinite(delta)) return;
+      void startBackgroundAudio();
+      scrubTo((Number(scrubSlider.value) || 0) + delta, { forceAudio: true });
+      syncScrubUi();
+    });
+  }
+
+  if (markInButton instanceof HTMLButtonElement) {
+    markInButton.addEventListener('click', () => {
+      markerInSec = Number(scrubSlider.value) || 0;
+      normalizeMarkers();
+      syncMarkerReadout();
+      setSaveStatus('In marker set.');
+    });
+  }
+
+  if (markOutButton instanceof HTMLButtonElement) {
+    markOutButton.addEventListener('click', () => {
+      markerOutSec = Number(scrubSlider.value) || 0;
+      normalizeMarkers();
+      syncMarkerReadout();
+      setSaveStatus('Out marker set.');
+    });
+  }
+
+  if (addSegmentButton instanceof HTMLButtonElement) {
+    addSegmentButton.addEventListener('click', () => {
+      normalizeMarkers();
+      const playheadSec = Math.max(0, Number(scrubSlider.value) || 0);
+      const markerSpanSec = Math.max(
+        FERRO_SEGMENT_MIN_SPAN_SEC,
+        Math.abs(markerOutSec - markerInSec) || 2,
+      );
+      const startSec = playheadSec;
+      const endSec = startSec + markerSpanSec;
+      const newSegment = sanitizeSpinSegment({
+        id: createSpinSegmentId(),
+        enabled: true,
+        startSec,
+        endSec,
+        direction: 'cw',
+        speedStart: 1,
+        speedEnd: 1,
+        easing: 'linear',
+        stopMode: 'none',
+        stopCycleSec: 0.2,
+        stopDurationSec: 0.08,
+      }, bgSpinTimeline.length);
+      if (!newSegment) return;
+      bgSpinTimeline.push(newSegment);
+      selectedSegmentId = newSegment.id;
+      markerInSec = newSegment.startSec;
+      markerOutSec = newSegment.endSec;
+      renderTimelineEditor();
+      syncScrubUi();
+      setSaveStatus('Segment added at playhead.');
+    });
+  }
+
+  if (deleteSelectedButton instanceof HTMLButtonElement) {
+    deleteSelectedButton.addEventListener('click', () => {
+      if (!selectedSegmentId) return;
+      bgSpinTimeline = bgSpinTimeline.filter((segment) => segment.id !== selectedSegmentId);
+      selectedSegmentId = bgSpinTimeline[0]?.id || '';
+      renderTimelineEditor();
+      syncScrubUi();
+      setSaveStatus('Segment removed.');
+    });
+  }
+
+  if (resetSegmentsButton instanceof HTMLButtonElement) {
+    resetSegmentsButton.addEventListener('click', () => {
+      resetFerroSpinTimelineToDefault();
+      selectedSegmentId = bgSpinTimeline[0]?.id || '';
+      renderTimelineEditor();
+      syncScrubUi();
+      setSaveStatus('Timeline reset to default.');
+    });
+  }
+
+  if (saveButton instanceof HTMLButtonElement) {
+    saveButton.addEventListener('click', () => {
+      const saved = persistFerroSpinTimeline({ saveDefault: isOwnerOperatorProfile() });
+      if (!saved) {
+        setSaveStatus('Unable to save timeline.', 'error');
+        return;
+      }
+      setSaveStatus('Timeline saved.');
+    });
+  }
+
+  if (saveDefaultButton instanceof HTMLButtonElement) {
+    saveDefaultButton.disabled = !isOwnerOperatorProfile();
+    saveDefaultButton.addEventListener('click', () => {
+      if (!isOwnerOperatorProfile()) {
+        setSaveStatus('Default save unavailable for this profile.', 'error');
+        return;
+      }
+      const saved = persistFerroSpinTimeline({ saveDefault: true });
+      if (!saved) {
+        setSaveStatus('Unable to save default timeline.', 'error');
+        return;
+      }
+      setSaveStatus('Default timeline saved.');
+    });
+  }
+
+  for (const field of [
+    fieldStart,
+    fieldEnd,
+    fieldDirection,
+    fieldSpeedStart,
+    fieldSpeedEnd,
+    fieldEasing,
+    fieldStopMode,
+    fieldStopCycle,
+    fieldStopDuration,
+    fieldEnabled,
+  ]) {
+    if (!(field instanceof HTMLElement)) continue;
+    field.addEventListener('change', applyInspectorChanges);
+    field.addEventListener('input', () => {
+      if (field === fieldStart || field === fieldEnd) return;
+      if (field instanceof HTMLSelectElement) return;
+      applyInspectorChanges();
+    });
+  }
+
+  const handleTimelineTimeFieldCommit = (event) => {
+    if (event instanceof KeyboardEvent && event.key !== 'Enter') return;
+    if (event instanceof KeyboardEvent) {
+      event.preventDefault();
+    }
+    applyInspectorChanges();
+    syncInspectorFromSelection();
+  };
+
+  if (fieldStart instanceof HTMLInputElement) {
+    fieldStart.addEventListener('keydown', handleTimelineTimeFieldCommit);
+    fieldStart.addEventListener('blur', handleTimelineTimeFieldCommit);
+  }
+  if (fieldEnd instanceof HTMLInputElement) {
+    fieldEnd.addEventListener('keydown', handleTimelineTimeFieldCommit);
+    fieldEnd.addEventListener('blur', handleTimelineTimeFieldCommit);
+  }
+
+  const audioEvents = ['timeupdate', 'durationchange', 'loadedmetadata', 'seeked', 'emptied', 'play', 'pause', 'ended'];
+  const handleAudioUpdate = () => {
+    syncScrubUi();
+  };
+
+  if (bgMusicEl instanceof HTMLAudioElement) {
+    for (const eventName of audioEvents) {
+      bgMusicEl.addEventListener(eventName, handleAudioUpdate);
+    }
+  }
+
+  const scrubIntervalId = window.setInterval(syncScrubUi, 110);
+  markerInSec = Number(scrubSlider.value) || 0;
+  markerOutSec = markerInSec + 2;
+  normalizeMarkers();
+  renderTimelineEditor();
+  syncScrubUi();
+
+  if (win && Array.isArray(win.cleanupHandlers)) {
+    win.cleanupHandlers.push(() => {
+      window.clearInterval(scrubIntervalId);
+      if (statusTimeoutId) {
+        window.clearTimeout(statusTimeoutId);
+        statusTimeoutId = 0;
+      }
+      if (bgMusicEl instanceof HTMLAudioElement) {
+        for (const eventName of audioEvents) {
+          bgMusicEl.removeEventListener(eventName, handleAudioUpdate);
+        }
+      }
+      if (ferroTimelinePreviewCanvas === previewCanvas) {
+        ferroTimelinePreviewCanvas = null;
+        ferroTimelinePreviewCtx = null;
+      }
+      if (ferroTimelinePreviewTimeLabel === previewTimeLabel) {
+        ferroTimelinePreviewTimeLabel = null;
+      }
+    });
+  }
+}
+
+function hydrateWindowBody(appId, bodyEl, win = null) {
   if (!(bodyEl instanceof HTMLElement)) return;
 
   if (appId === 'notes') {
@@ -2083,6 +3741,31 @@ function hydrateWindowBody(appId, bodyEl) {
       intensityRange.addEventListener('input', () => {
         osSettings.motionIntensity = clamp(Number(intensityRange.value), 0, 1);
         persistSettings();
+      });
+    }
+
+    const volumeRange = bodyEl.querySelector('.os-setting-volume');
+    const volumeValue = bodyEl.querySelector('.os-setting-volume-value');
+    if (volumeRange instanceof HTMLInputElement) {
+      const syncVolumeLabel = () => {
+        const percent = clamp(Number(volumeRange.value), BG_MUSIC_VOLUME_MIN_PERCENT, BG_MUSIC_VOLUME_MAX_PERCENT);
+        if (volumeValue instanceof HTMLOutputElement || volumeValue instanceof HTMLElement) {
+          volumeValue.textContent = `${Math.round(percent)}%`;
+        }
+        return percent;
+      };
+
+      volumeRange.value = String(Math.round(clamp(
+        Number(osSettings.musicVolumePercent),
+        BG_MUSIC_VOLUME_MIN_PERCENT,
+        BG_MUSIC_VOLUME_MAX_PERCENT,
+      )));
+      syncVolumeLabel();
+
+      volumeRange.addEventListener('input', () => {
+        osSettings.musicVolumePercent = syncVolumeLabel();
+        persistSettings();
+        applyBackgroundMusicVolume();
       });
     }
 
@@ -2125,6 +3808,39 @@ function hydrateWindowBody(appId, bodyEl) {
         persistSettings();
       });
     }
+
+    const liveReactionToggle = bodyEl.querySelector('.os-ferro-live-reaction-toggle');
+    if (liveReactionToggle instanceof HTMLInputElement) {
+      liveReactionToggle.checked = Boolean(osSettings.liveOrbReactionEnabled);
+      liveReactionToggle.addEventListener('change', () => {
+        osSettings.liveOrbReactionEnabled = liveReactionToggle.checked;
+        persistSettings();
+        syncFerroTimelinePreview(Number(bgMusicEl?.currentTime), { drawFrame: true });
+      });
+    }
+
+    const openTimelineButton = bodyEl.querySelector('.os-open-ferro-timeline');
+    if (openTimelineButton instanceof HTMLButtonElement) {
+      openTimelineButton.addEventListener('click', () => {
+        openAppWindow('ferro-timeline', {
+          originRect: openTimelineButton.getBoundingClientRect(),
+        });
+      });
+    }
+  }
+
+  if (appId === 'ferro-timeline') {
+    hydrateFerroTimelineEditor(bodyEl, win);
+    return;
+  }
+
+  if (appId === 'about-system') {
+    const returnBtn = bodyEl.querySelector('#return-to-main');
+    if (returnBtn instanceof HTMLButtonElement) {
+      returnBtn.addEventListener('click', () => {
+        window.location.href = '/';
+      });
+    }
   }
 }
 function focusWindow(appId) {
@@ -2147,9 +3863,33 @@ function clampWindowPosition(win) {
   win.element.style.transform = `translate(${win.x}px, ${win.y}px)`;
 }
 
+function getWindowSizePercent(win) {
+  if (!win) return 100;
+  const defaultWidth = Math.max(1, Number(win.defaultWidth) || Number(win.width) || 1);
+  const defaultHeight = Math.max(1, Number(win.defaultHeight) || Number(win.height) || 1);
+  const widthScale = (Number(win.width) || defaultWidth) / defaultWidth;
+  const heightScale = (Number(win.height) || defaultHeight) / defaultHeight;
+  const scale = (widthScale + heightScale) * 0.5;
+  return Math.round(clamp(scale * 100, WINDOW_SIZE_MIN_PERCENT, WINDOW_SIZE_MAX_PERCENT));
+}
+
+function syncWindowSizeIndicator(win) {
+  if (!win || !(win.sizeIndicator instanceof HTMLElement)) return;
+  win.sizeIndicator.textContent = `${getWindowSizePercent(win)}%`;
+}
+
 function closeWindow(appId, { animate = true } = {}) {
   const win = windowsByAppId.get(appId);
   if (!win) return;
+  if (Array.isArray(win.cleanupHandlers) && win.cleanupHandlers.length > 0) {
+    for (const cleanup of win.cleanupHandlers.splice(0, win.cleanupHandlers.length)) {
+      try {
+        cleanup();
+      } catch {
+        // ignore cleanup failures
+      }
+    }
+  }
   const shouldAnimate = animate && !win.minimized;
   windowsByAppId.delete(appId);
   if (!shouldAnimate) {
@@ -2205,6 +3945,7 @@ function minimizeWindow(appId, { targetRect = null } = {}) {
   }
 
   setTaskbarActiveState();
+  syncMobileTaskbarInlineWidth();
 }
 
 function restoreWindow(appId, { originRect = null } = {}) {
@@ -2226,10 +3967,10 @@ function restoreWindow(appId, { originRect = null } = {}) {
   animateWindowOpen(win.element, win, originRect);
 }
 
-function onWindowHeaderPointerDown(event) {
-  const header = event.currentTarget;
-  if (!(header instanceof HTMLElement)) return;
-  const windowEl = header.closest('.os-window');
+function onWindowFlapPointerDown(event) {
+  const flapHandle = event.currentTarget;
+  if (!(flapHandle instanceof HTMLElement)) return;
+  const windowEl = flapHandle.closest('.os-window');
   if (!(windowEl instanceof HTMLElement)) return;
   if (event.target instanceof HTMLElement && event.target.closest('.os-window-close')) return;
 
@@ -2245,10 +3986,12 @@ function onWindowHeaderPointerDown(event) {
     startClientY: event.clientY,
     startX: win.x,
     startY: win.y,
+    handle: flapHandle,
   };
+  windowEl.classList.add('is-dragging-by-flap');
 
   try {
-    header.setPointerCapture(event.pointerId);
+    flapHandle.setPointerCapture(event.pointerId);
   } catch {
     // optional pointer capture support
   }
@@ -2278,6 +4021,18 @@ function handleWindowPointerMove(event) {
 function handleWindowPointerUp(event) {
   if (!activeWindowDrag) return;
   if (event.pointerId !== activeWindowDrag.pointerId) return;
+  const win = windowsByAppId.get(activeWindowDrag.appId);
+  if (win) {
+    win.element.classList.remove('is-dragging-by-flap');
+  }
+  const dragHandle = activeWindowDrag.handle;
+  if (dragHandle instanceof HTMLElement) {
+    try {
+      dragHandle.releasePointerCapture(event.pointerId);
+    } catch {
+      // optional pointer capture support
+    }
+  }
   activeWindowDrag = null;
 }
 
@@ -2330,7 +4085,7 @@ function animateWindowClose(windowEl, win, targetRect = null) {
       fill: 'forwards',
     },
   );
-  return animation.finished.catch(() => {});
+  return animation.finished.catch(() => { });
 }
 
 function createWindowAfterimage(windowEl) {
@@ -2359,14 +4114,14 @@ function createWindowAfterimage(windowEl) {
   );
 
   animation.finished
-    .catch(() => {})
+    .catch(() => { })
     .finally(() => {
       ghost.remove();
     });
 }
 
 function startWindowAfterimageTrail(windowEl, frameInterval = MINIMIZE_AFTERIMAGE_FRAME_INTERVAL) {
-  if (!(windowEl instanceof HTMLElement)) return () => {};
+  if (!(windowEl instanceof HTMLElement)) return () => { };
   let rafId = 0;
   let frameCount = 0;
   let stopped = false;
@@ -2461,7 +4216,7 @@ function animateWindowMinimize(windowEl, win, targetRect = null) {
   );
 
   return animation.finished
-    .catch(() => {})
+    .catch(() => { })
     .finally(() => {
       stopTrail();
     });
@@ -2501,25 +4256,15 @@ function openAppWindow(appId, options = {}) {
   windowEl.className = 'os-window';
   windowEl.dataset.app = appId;
   windowEl.dataset.panel = getPanelCodeForApp(appId);
-  windowEl.dataset.coord = getPanelCoordinateForApp(appId);
   windowEl.dataset.navigator = getPanelNavigatorForApp(appId);
+  windowEl.dataset.flapLabel = String(meta.title || '').toUpperCase();
+  if (appId === 'ferro-timeline') {
+    windowEl.classList.add('os-window--timeline-editor');
+  }
 
-  const headerEl = document.createElement('header');
-  headerEl.className = 'os-window-header';
-  headerEl.dataset.panel = windowEl.dataset.panel;
-  headerEl.dataset.coord = windowEl.dataset.coord;
-  headerEl.dataset.navigator = windowEl.dataset.navigator;
-
-  const titleGroupEl = document.createElement('div');
-  titleGroupEl.className = 'os-window-title-group';
-
-  const metaEl = document.createElement('span');
-  metaEl.className = 'os-window-meta';
-  metaEl.textContent = windowEl.dataset.navigator;
-
-  const titleEl = document.createElement('span');
-  titleEl.className = 'os-window-title';
-  titleEl.textContent = meta.title;
+  const flapHandleEl = document.createElement('div');
+  flapHandleEl.className = 'os-window-flap-handle';
+  flapHandleEl.setAttribute('aria-hidden', 'true');
 
   const closeEl = document.createElement('button');
   closeEl.className = 'os-window-close';
@@ -2527,16 +4272,18 @@ function openAppWindow(appId, options = {}) {
   closeEl.setAttribute('aria-label', `Close ${meta.title}`);
   closeEl.textContent = 'x';
 
-  titleGroupEl.appendChild(metaEl);
-  titleGroupEl.appendChild(titleEl);
-  headerEl.appendChild(titleGroupEl);
-  headerEl.appendChild(closeEl);
+  const sizeIndicatorEl = document.createElement('span');
+  sizeIndicatorEl.className = 'os-window-size-indicator';
+  sizeIndicatorEl.setAttribute('aria-hidden', 'true');
+  sizeIndicatorEl.textContent = '100%';
 
   const bodyEl = document.createElement('div');
   bodyEl.className = 'os-window-body';
   bodyEl.innerHTML = buildWindowBodyMarkup(appId);
 
-  windowEl.appendChild(headerEl);
+  windowEl.appendChild(flapHandleEl);
+  windowEl.appendChild(closeEl);
+  windowEl.appendChild(sizeIndicatorEl);
   windowEl.appendChild(bodyEl);
   osWindowLayer.appendChild(windowEl);
 
@@ -2544,41 +4291,63 @@ function openAppWindow(appId, options = {}) {
   const maxWindowWidth = Math.max(260, window.innerWidth - margins.left - margins.right);
   const maxWindowHeight = Math.max(220, window.innerHeight - margins.top - margins.bottom);
   const mobileLayout = isMobileLayout();
-  const baseWidth = mobileLayout
+  const defaultWidth = clamp(meta.window.width, mobileLayout ? 260 : 320, maxWindowWidth);
+  const defaultHeight = clamp(meta.window.height, 220, maxWindowHeight);
+  let baseWidth = mobileLayout
     ? maxWindowWidth
-    : clamp(meta.window.width, 320, maxWindowWidth);
-  const baseHeight = mobileLayout
+    : defaultWidth;
+  let baseHeight = mobileLayout
     ? clamp(Math.round(maxWindowHeight * 0.72), 240, maxWindowHeight)
-    : clamp(meta.window.height, 220, maxWindowHeight);
+    : defaultHeight;
 
   const offset = mobileLayout ? 0 : (windowsByAppId.size * 24);
+  if (appId === 'ferro-timeline') {
+    baseWidth = mobileLayout
+      ? maxWindowWidth
+      : clamp(Math.round(window.innerWidth * 0.88), 900, maxWindowWidth);
+    baseHeight = mobileLayout
+      ? clamp(Math.round(maxWindowHeight * 0.82), 300, maxWindowHeight)
+      : clamp(Math.round(window.innerHeight * 0.68), 540, maxWindowHeight);
+  }
+
+  const centeredX = mobileLayout
+    ? margins.left
+    : Math.round((window.innerWidth - baseWidth) * 0.5) + (appId === 'ferro-timeline' ? 0 : offset);
+  const centeredY = mobileLayout
+    ? margins.top + 6
+    : Math.round((window.innerHeight - baseHeight) * 0.38) + offset;
+  const timelineY = mobileLayout
+    ? margins.top + 6
+    : Math.max(margins.top + 12, window.innerHeight - baseHeight - getTaskbarReservePx() - 8);
+
   const win = {
     appId,
     element: windowEl,
-    header: headerEl,
+    flapHandle: flapHandleEl,
     body: bodyEl,
+    sizeIndicator: sizeIndicatorEl,
+    cleanupHandlers: [],
     minimized: false,
     minimizeRevision: 0,
-    x: mobileLayout
-      ? margins.left
-      : Math.round((window.innerWidth - baseWidth) * 0.5) + offset,
-    y: mobileLayout
-      ? margins.top + 6
-      : Math.round((window.innerHeight - baseHeight) * 0.38) + offset,
+    x: centeredX,
+    y: appId === 'ferro-timeline' ? timelineY : centeredY,
     width: baseWidth,
     height: baseHeight,
+    defaultWidth,
+    defaultHeight,
   };
 
   windowEl.style.width = `${win.width}px`;
   windowEl.style.height = `${win.height}px`;
 
   clampWindowPosition(win);
+  syncWindowSizeIndicator(win);
 
   closeEl.addEventListener('click', () => {
     closeWindow(appId);
   });
 
-  headerEl.addEventListener('pointerdown', onWindowHeaderPointerDown);
+  flapHandleEl.addEventListener('pointerdown', onWindowFlapPointerDown);
   windowEl.addEventListener('pointerdown', () => {
     focusWindow(appId);
   });
@@ -2586,7 +4355,7 @@ function openAppWindow(appId, options = {}) {
   windowsByAppId.set(appId, win);
   buildTaskbarApps();
   focusWindow(appId);
-  hydrateWindowBody(appId, bodyEl);
+  hydrateWindowBody(appId, bodyEl, win);
   animateWindowOpen(windowEl, win, options.originRect || null);
 }
 
@@ -2671,12 +4440,17 @@ function buildTaskbarApps() {
     button.dataset.app = app.id;
     button.setAttribute('aria-label', app.title);
 
+    const iconShell = document.createElement('span');
+    iconShell.className = 'os-taskbar-app-shell';
+
     const img = document.createElement('img');
     img.src = app.icon;
     img.alt = '';
     img.decoding = 'async';
+    img.loading = 'lazy';
 
-    button.appendChild(img);
+    iconShell.appendChild(img);
+    button.appendChild(iconShell);
     button.addEventListener('pointerdown', handleTaskbarAppPointerDown);
     button.addEventListener('click', () => {
       const suppressUntil = taskbarClickSuppressUntilByApp.get(app.id) ?? 0;
@@ -2708,6 +4482,7 @@ function buildTaskbarApps() {
 
 function resetIconLayout() {
   for (const app of OS_APPS) {
+    if (app.desktop === false) continue;
     applyIconPosition(app.id, app.defaultX, app.defaultY, { snap: true, persist: false });
   }
   persistIconLayoutMap();
@@ -2723,21 +4498,28 @@ function buildDesktopIcons() {
   const shouldShiftStoredIconsUp = localStorage.getItem(STORAGE_ICON_LAYOUT_SHIFT_UP) !== '1';
 
   for (const app of OS_APPS) {
+    if (app.desktop === false) continue;
     const iconButton = document.createElement('button');
     iconButton.className = 'os-desktop-icon';
     iconButton.type = 'button';
     iconButton.dataset.app = app.id;
     iconButton.setAttribute('aria-label', app.title);
 
+    const iconShell = document.createElement('span');
+    iconShell.className = 'os-desktop-icon-shell';
+
     const img = document.createElement('img');
     img.src = app.icon;
     img.alt = '';
     img.decoding = 'async';
+    img.loading = 'lazy';
 
     const label = document.createElement('span');
+    label.className = 'os-desktop-icon-label';
     label.textContent = app.title;
 
-    iconButton.appendChild(img);
+    iconShell.appendChild(img);
+    iconButton.appendChild(iconShell);
     iconButton.appendChild(label);
 
     iconButton.addEventListener('click', onDesktopIconClick);
@@ -2774,6 +4556,7 @@ function applyWindowBoundsOnResize() {
     win.height = clamp(win.height, 220, maxWindowHeight);
     win.element.style.width = `${win.width}px`;
     win.element.style.height = `${win.height}px`;
+    syncWindowSizeIndicator(win);
     clampWindowPosition(win);
   }
 
@@ -2881,8 +4664,8 @@ function ensureBackgroundAudioChain() {
   const music = new Audio(BG_MUSIC_SRC);
   music.loop = true;
   music.preload = 'auto';
-  music.volume = BG_MUSIC_VOLUME;
   bgMusicEl = music;
+  applyBackgroundMusicVolume();
 
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextCtor) return;
@@ -2914,6 +4697,122 @@ function averageBand(data, start, end) {
     total += data[i];
   }
   return total / (to - from);
+}
+
+function getBackgroundMusicVolume() {
+  const percent = clamp(
+    Number(osSettings.musicVolumePercent),
+    BG_MUSIC_VOLUME_MIN_PERCENT,
+    BG_MUSIC_VOLUME_MAX_PERCENT,
+  );
+  return clamp(BG_MUSIC_VOLUME_BASE * (percent / 100), 0, 1);
+}
+
+function applyBackgroundMusicVolume() {
+  if (!bgMusicEl) return;
+  bgMusicEl.volume = getBackgroundMusicVolume();
+}
+
+function syncFerroTimelinePreview(currentTimeSec = Number.NaN, options = {}) {
+  const shouldDrawFrame = options?.drawFrame !== false;
+  const reactionEnabled = Boolean(osSettings.liveOrbReactionEnabled);
+
+  if (ferroTimelinePreviewTimeLabel instanceof HTMLElement) {
+    if (reactionEnabled) {
+      const fallbackSec = (bgMusicEl && Number.isFinite(bgMusicEl.currentTime))
+        ? Number(bgMusicEl.currentTime)
+        : 0;
+      const shownSec = Number.isFinite(currentTimeSec) ? currentTimeSec : fallbackSec;
+      ferroTimelinePreviewTimeLabel.textContent = formatMediaTimestampDetailed(Math.max(0, shownSec));
+    } else {
+      ferroTimelinePreviewTimeLabel.textContent = 'DISABLED';
+    }
+  }
+
+  if (!shouldDrawFrame) return;
+  if (!(ferroTimelinePreviewCanvas instanceof HTMLCanvasElement)) return;
+  if (!(osBgVisualizer instanceof HTMLCanvasElement)) return;
+
+  const sourceWidth = osBgVisualizer.width;
+  const sourceHeight = osBgVisualizer.height;
+  if (sourceWidth < 2 || sourceHeight < 2) return;
+
+  if (!ferroTimelinePreviewCtx) {
+    ferroTimelinePreviewCtx = ferroTimelinePreviewCanvas.getContext('2d', {
+      alpha: true,
+      desynchronized: true,
+    });
+  }
+  if (!ferroTimelinePreviewCtx) return;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const previewWidthCss = Math.max(1, ferroTimelinePreviewCanvas.clientWidth || 360);
+  const previewHeightCss = Math.max(1, ferroTimelinePreviewCanvas.clientHeight || 220);
+  const targetWidth = Math.max(1, Math.round(previewWidthCss * dpr));
+  const targetHeight = Math.max(1, Math.round(previewHeightCss * dpr));
+  if (ferroTimelinePreviewCanvas.width !== targetWidth || ferroTimelinePreviewCanvas.height !== targetHeight) {
+    ferroTimelinePreviewCanvas.width = targetWidth;
+    ferroTimelinePreviewCanvas.height = targetHeight;
+  }
+
+  const previewCtx = ferroTimelinePreviewCtx;
+  if (!reactionEnabled) {
+    previewCtx.clearRect(0, 0, targetWidth, targetHeight);
+    previewCtx.globalAlpha = 1;
+    previewCtx.fillStyle = 'rgba(225, 232, 242, 0.96)';
+    previewCtx.fillRect(0, 0, targetWidth, targetHeight);
+    previewCtx.fillStyle = 'rgba(132, 141, 154, 0.92)';
+    previewCtx.font = `${Math.max(12, Math.round(targetHeight * 0.12))}px "whitrabt", monospace`;
+    previewCtx.textAlign = 'center';
+    previewCtx.textBaseline = 'middle';
+    previewCtx.fillText('LIVE ORB REACTION OFF', targetWidth * 0.5, targetHeight * 0.5);
+    return;
+  }
+
+  const targetAspect = targetWidth / targetHeight;
+  const sourceAspect = sourceWidth / sourceHeight;
+
+  let sx = 0;
+  let sy = 0;
+  let sw = sourceWidth;
+  let sh = sourceHeight;
+
+  if (sourceAspect > targetAspect) {
+    sw = Math.max(1, Math.round(sourceHeight * targetAspect));
+    sx = Math.max(0, Math.round((sourceWidth - sw) * 0.5));
+  } else if (sourceAspect < targetAspect) {
+    sh = Math.max(1, Math.round(sourceWidth / targetAspect));
+    sy = Math.max(0, Math.round((sourceHeight - sh) * 0.5));
+  }
+
+  previewCtx.clearRect(0, 0, targetWidth, targetHeight);
+  previewCtx.imageSmoothingEnabled = true;
+  previewCtx.imageSmoothingQuality = 'high';
+  previewCtx.globalAlpha = 1;
+  previewCtx.fillStyle = 'rgba(224, 231, 241, 0.94)';
+  previewCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+  previewCtx.save();
+  previewCtx.filter = 'brightness(0.75) contrast(0.86) saturate(0.82)';
+  previewCtx.globalAlpha = 0.92;
+  previewCtx.drawImage(
+    osBgVisualizer,
+    sx,
+    sy,
+    sw,
+    sh,
+    0,
+    0,
+    targetWidth,
+    targetHeight,
+  );
+  previewCtx.restore();
+
+  previewCtx.save();
+  previewCtx.globalCompositeOperation = 'multiply';
+  previewCtx.fillStyle = 'rgba(192, 202, 216, 0.2)';
+  previewCtx.fillRect(0, 0, targetWidth, targetHeight);
+  previewCtx.restore();
 }
 
 function analyzeBackgroundAudio() {
@@ -2969,7 +4868,7 @@ function stopBackgroundAudio() {
     bgMusicEl.pause();
   }
   if (bgMusicCtx && bgMusicCtx.state === 'running') {
-    bgMusicCtx.suspend().catch(() => {});
+    bgMusicCtx.suspend().catch(() => { });
   }
 }
 
@@ -2988,6 +4887,7 @@ function applyBackgroundVisualizerSize() {
 function setBackgroundQuality(nextTier) {
   if (nextTier !== 'high' && nextTier !== 'medium' && nextTier !== 'low') return;
   if (bgQualityTier === nextTier) return;
+  console.log(`[Ferrofluid] Quality: ${bgQualityTier} \u2192 ${nextTier}`);
   bgQualityTier = nextTier;
   applyBackgroundQualityProfile();
 }
@@ -3012,8 +4912,57 @@ function evaluateBackgroundPerformance(deltaMs) {
   }
 }
 
+function isReducedMotionPreferred() {
+  return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+}
+
+function startFerroIntroIfNeeded() {
+  if (bgFerroIntro.played) return;
+  bgFerroIntro.played = true;
+  bgFerroIntro.startedAtMs = performance.now();
+  if (!osSettings.motionEnabled || isReducedMotionPreferred()) {
+    bgFerroIntro.active = false;
+    if (bgFerroMesh) {
+      bgFerroMesh.position.y = 0;
+    }
+    return;
+  }
+  bgFerroIntro.active = true;
+  if (bgFerroMesh) {
+    bgFerroMesh.position.y = BG_FERRO_INTRO_START_Y;
+  }
+}
+
+function resolveFerroIntroOffsetY(nowMs) {
+  if (!bgFerroIntro.active) return 0;
+  const elapsedMs = Math.max(0, nowMs - bgFerroIntro.startedAtMs);
+  if (elapsedMs <= BG_FERRO_INTRO_DROP_MS) {
+    const dropProgress = rangeProgress(elapsedMs, 0, BG_FERRO_INTRO_DROP_MS);
+    return lerpValue(BG_FERRO_INTRO_START_Y, BG_FERRO_INTRO_IMPACT_Y, easeInCubic(dropProgress));
+  }
+
+  const bounceElapsedMs = elapsedMs - BG_FERRO_INTRO_DROP_MS;
+  if (bounceElapsedMs <= BG_FERRO_INTRO_BOUNCE_MS) {
+    const bounceProgress = rangeProgress(bounceElapsedMs, 0, BG_FERRO_INTRO_BOUNCE_MS);
+    const envelope = Math.exp(-BG_FERRO_INTRO_BOUNCE_DAMPING * bounceProgress);
+    const phase = Math.PI * BG_FERRO_INTRO_BOUNCE_FREQ * bounceProgress;
+    const spring = BG_FERRO_INTRO_IMPACT_Y * envelope * Math.cos(phase);
+    const rebound = BG_FERRO_INTRO_BOUNCE_AMPLITUDE * envelope * Math.sin(phase);
+    return spring + rebound;
+  }
+
+  bgFerroIntro.active = false;
+  return 0;
+}
+
+function applyFerroIntroPose(nowMs = performance.now()) {
+  if (!bgFerroMesh) return;
+  bgFerroMesh.position.y = resolveFerroIntroOffsetY(nowMs);
+}
+
 function drawStaticBackgroundFrame() {
   if (!bgRenderer || !bgScene || !bgCamera) return;
+  const frameNowMs = performance.now();
   applyBackgroundCameraPose(16.67);
   if (bgFerroMaterial) {
     bgFerroMaterial.uniforms.uMotion.value = 0;
@@ -3021,13 +4970,16 @@ function drawStaticBackgroundFrame() {
     bgFerroMaterial.uniforms.uAudioEnergy.value = clamp(bgAudioEnergy, 0, 1);
     bgFerroMaterial.uniforms.uPointer.value.copy(bgPointerCurrent);
     bgFerroMaterial.uniforms.uPointerStrength.value = clamp(bgPointerStrength, 0, 1) * 0.72;
-    bgFerroMaterial.uniforms.uAlpha.value = 0.52 * BG_FERRO_ALPHA_MULTIPLIER;
+    bgFerroMaterial.uniforms.uAlpha.value = 0.52 * BG_FERRO_ALPHA_MULTIPLIER * getThemeFerroAlphaScale();
   }
+  applyFerroIntroPose(frameNowMs);
   bgRenderer.render(bgScene, bgCamera);
+  syncFerroTimelinePreview();
 }
 
 function drawAnimatedBackgroundFrame(deltaMs) {
   if (!bgRenderer || !bgScene || !bgCamera || !bgFerroMaterial || !bgFerroMesh) return;
+  const frameNowMs = performance.now();
   analyzeBackgroundAudio();
   const intensityBase = clamp(osSettings.motionIntensity, 0, 1);
   const audioDrive = clamp(bgAudioEnergy * 1.28, 0, 1);
@@ -3043,11 +4995,18 @@ function drawAnimatedBackgroundFrame(deltaMs) {
   bgFerroMaterial.uniforms.uAudioEnergy.value = audioDrive;
   bgFerroMaterial.uniforms.uPointer.value.copy(bgPointerCurrent);
   bgFerroMaterial.uniforms.uPointerStrength.value = clamp(bgPointerStrength, 0, 1);
-  bgFerroMaterial.uniforms.uAlpha.value = (0.5 + (audioDrive * 0.08)) * BG_FERRO_ALPHA_MULTIPLIER;
-  bgFerroMesh.rotation.y += deltaMs * (0.00006 + combinedIntensity * 0.00016);
+  bgFerroMaterial.uniforms.uAlpha.value = (0.5 + (audioDrive * 0.08)) * BG_FERRO_ALPHA_MULTIPLIER * getThemeFerroAlphaScale();
+  const trackTimeSec = (bgMusicEl && !bgMusicEl.paused)
+    ? Number(bgMusicEl.currentTime)
+    : Number.NaN;
+  const scriptedSpinMultiplier = getScriptedOrbSpinMultiplier(trackTimeSec);
+  const spinRate = BG_SPIN_BASE_RATE + (combinedIntensity * BG_SPIN_AUDIO_RATE);
+  bgFerroMesh.rotation.y += deltaMs * spinRate * scriptedSpinMultiplier;
   bgFerroMesh.rotation.x = Math.sin(bgTimeline * 0.000095 + bgOrbitYaw * 0.2) * 0.1;
   bgFerroMesh.rotation.z = Math.cos(bgTimeline * 0.00007 + bgOrbitPitch * 0.6) * 0.045;
+  applyFerroIntroPose(frameNowMs);
   bgRenderer.render(bgScene, bgCamera);
+  syncFerroTimelinePreview(trackTimeSec);
   evaluateBackgroundPerformance(deltaMs);
 }
 
@@ -3066,8 +5025,10 @@ function buildFerroMaterial() {
       uAudioEnergy: { value: 0 },
       uPointer: { value: new THREE.Vector2(0, 0) },
       uPointerStrength: { value: 0 },
-      uBaseColor: { value: new THREE.Color(0xe5ebf4) },
+      uBaseColor: { value: new THREE.Color(getThemeFerroBaseColorHex()) },
+      uHighlightStrength: { value: getThemeFerroHighlightStrength() },
       uAlpha: { value: 0.52 * BG_FERRO_ALPHA_MULTIPLIER },
+      uAlphaFinalScale: { value: BG_FERRO_ALPHA_FINAL_SCALE },
     },
   });
 }
@@ -3129,6 +5090,7 @@ function stopBackgroundVisualizer({ keepStaticFrame = false } = {}) {
   }
   if (keepStaticFrame && ensureBackgroundVisualizerScene()) {
     drawStaticBackgroundFrame();
+    return;
   }
 }
 
@@ -3198,7 +5160,7 @@ function destroyBackgroundVisualizer() {
     bgMusicAnalyser = null;
   }
   if (bgMusicCtx) {
-    bgMusicCtx.close().catch(() => {});
+    bgMusicCtx.close().catch(() => { });
     bgMusicCtx = null;
   }
   if (bgMusicEl) {
@@ -3228,6 +5190,9 @@ function destroyBackgroundVisualizer() {
     bgRenderer.dispose();
     bgRenderer = null;
   }
+  ferroTimelinePreviewCanvas = null;
+  ferroTimelinePreviewCtx = null;
+  ferroTimelinePreviewTimeLabel = null;
 }
 function onDocumentVisibilityChange() {
   syncBackgroundVisualizerMode();
@@ -3294,6 +5259,9 @@ function onBackgroundWheel(event) {
 function onGlobalPointerDown(event) {
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
+  if (event.pointerType === 'touch' && isMobileLayout()) {
+    void ensureDockOrientationAccess(true);
+  }
   if (root?.classList.contains('state-os-ready')) {
     void startBackgroundAudio();
   }
@@ -3399,6 +5367,7 @@ function teardownOsGlobalListeners() {
 
 function onWindowResize() {
   setupDockInteractions();
+  syncMobileTaskbarInlineWidth();
   applyWindowBoundsOnResize();
   applyLoaderSceneSize();
   applyBackgroundVisualizerSize();
@@ -3420,40 +5389,65 @@ function resetBackgroundViewState() {
   bgPointerTargetStrength = 0;
 }
 
+function initializeSocialHubIfNeeded() {
+  if (socialHubInitialized) return;
+  if (!(socialHubRoot instanceof HTMLElement)) return;
+  if (!(socialHubProfile instanceof HTMLElement)) return;
+  if (!(socialHubShowcases instanceof HTMLElement)) return;
+  if (!(socialHubSidebar instanceof HTMLElement)) return;
+
+  const dataSources = createSocialHubDataSources();
+  socialHubRenderer = createSocialHubRenderer({
+    sites: SOCIAL_HUB_SITES,
+    root: socialHubRoot,
+    profile: socialHubProfile,
+    showcases: socialHubShowcases,
+    sidebar: socialHubSidebar,
+    lastRefreshLabel: socialHubLastRefresh,
+    refreshButton: socialHubRefreshButton,
+    onRefreshRequested: () => {
+      if (!socialHubState) return;
+      void socialHubState.refreshAll('manual');
+    },
+  });
+
+  socialHubState = createSocialHubState({
+    sites: SOCIAL_HUB_SITES,
+    seedPayloads: createSeedPayloadMap(),
+    loadSitePayload: dataSources.loadSitePayload,
+    onStateChange: (snapshot) => {
+      socialHubRenderer?.render(snapshot);
+    },
+  });
+
+  socialHubState.startAutoRefresh();
+  socialHubInitialized = true;
+}
+
+function destroySocialHub() {
+  socialHubState?.dispose();
+  socialHubState = null;
+  socialHubRenderer?.dispose();
+  socialHubRenderer = null;
+  socialHubInitialized = false;
+}
+
 function initializeOsShellIfNeeded() {
   if (osInitialized) return;
-  loadSettings();
-  loadTaskbarPins();
-  applyTaskbarStyle();
-  loadNotes();
-  buildDesktopIcons();
-  buildTaskbarApps();
-  setupDockInteractions();
-  wireStartMenuHandlers();
-  setupOsGlobalListeners();
-  startDateTimeTicker();
-  applyBackgroundVisualizerSize();
-  drawStaticBackgroundFrame();
   osInitialized = true;
 }
 
 function enterOsReadyState() {
-  if (osShutdownScreen) {
-    osShutdownScreen.hidden = true;
-  }
   resetBackgroundViewState();
   setState('os-ready');
-  initializeOsShellIfNeeded();
-  startDateTimeTicker();
-  syncBackgroundVisualizerMode();
+  loadSettings();
+  applyThemeMode();
+  initializeSocialHubIfNeeded();
 }
 
 async function restartOsShell() {
   if (osRestartInFlight || teardownStarted) return;
   osRestartInFlight = true;
-  setStartMenuOpen(false);
-  clearAllWindows();
-  setSelectedIcon('');
   try {
     await runLoaderSequence(LOADER_TOTAL_MS);
     if (!teardownStarted) {
@@ -3464,12 +5458,27 @@ async function restartOsShell() {
   }
 }
 
+let biosSkipProgressEl = null;
+
+function updateBiosSkipProgress(progress) {
+  if (!biosSkipProgressEl) return;
+  if (progress > 0) {
+    biosSkipProgressEl.classList.add('visible');
+    biosSkipProgressEl.style.setProperty('--progress', String(progress));
+  } else {
+    biosSkipProgressEl.classList.remove('visible');
+  }
+}
+
 function onBiosStagePointerDown() {
   if (!biosPreludeActive || teardownStarted) return;
   biosSkipClickCount += 1;
+  const progress = Math.min(biosSkipClickCount / BIOS_SKIP_CLICK_THRESHOLD, 1);
+  updateBiosSkipProgress(progress);
   if (biosSkipClickCount >= BIOS_SKIP_CLICK_THRESHOLD) {
     biosSkipRequested = true;
     biosSkipClickCount = 0;
+    updateBiosSkipProgress(0);
   }
 }
 
@@ -3499,6 +5508,11 @@ async function runFlow() {
 
 if (biosStage) {
   biosStage.addEventListener('pointerdown', onBiosStagePointerDown);
+  biosSkipProgressEl = document.createElement('div');
+  biosSkipProgressEl.className = 'bios-skip-progress';
+  biosSkipProgressEl.setAttribute('aria-hidden', 'true');
+  biosSkipProgressEl.innerHTML = '<span class="bios-skip-text">Click to skip...</span>';
+  biosStage.appendChild(biosSkipProgressEl);
 }
 
 if (root && biosLog) {
@@ -3519,6 +5533,7 @@ window.addEventListener('pagehide', () => {
   clearManagedTimers();
   cancelLoaderRaf();
   destroyLoaderScene();
+  destroySocialHub();
   destroyBackgroundVisualizer();
   stopDateTimeTicker();
   stopTypingSoundPool();

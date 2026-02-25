@@ -2,7 +2,7 @@
   <div
     ref="iconRef"
     class="desktop-icon"
-    :class="{ selected: isSelected }"
+    :class="{ selected: isSelected, hinting: hinting }"
     :style="{ transform: `translate(${pos.x}px, ${pos.y}px)` }"
     @pointerdown="onPointerDown"
     @click="onClick"
@@ -42,6 +42,7 @@ const props = defineProps<{
   viewportScale: number;
 
   notifications?: boolean;
+  hinting?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -209,6 +210,13 @@ onBeforeUnmount(() => {
   color: var(--font-base);
   text-align: center;
   white-space: nowrap;
+}
+.desktop-icon.hinting .icon {
+  animation: trash-hint-glow 1.5s ease-in-out infinite;
+}
+@keyframes trash-hint-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(211, 193, 222, 0.3)); }
+  50% { filter: drop-shadow(0 0 16px rgba(189, 100, 241, 0.9)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)); }
 }
 </style>
 

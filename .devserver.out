@@ -1,0 +1,60 @@
+
+> windose-os@0.0.0 dev
+> vite --host 127.0.0.1 --port 4173
+
+Port 4173 is in use, trying another one...
+
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m304[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m4174[22m/[39m
+[2m11:39:38 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mpublic/ames-corner.html[22m
+[2m11:39:47 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mames-corner.html[22m
+[2m12:06:30 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mpublic/ames-corner.html[22m
+[2m12:06:38 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mames-corner.html[22m
+[2m1:39:25 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m1:39:43 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m1:43:12 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m1:46:10 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m1:46:20 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m1:47:00 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m1:47:21 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/config.js[22m
+[2m1:47:33 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m1:52:55 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/config.js[22m
+[2m1:53:06 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/config.js[22m
+[2m1:53:23 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m1:53:41 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m1:53:54 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m1:58:14 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:02:15 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:04:44 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mpublic/ames-corner.html[22m
+[2m2:04:53 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mames-corner.html[22m
+[2m2:05:07 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:06:40 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:12:42 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m2:12:54 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m2:13:03 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:13:32 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:15:25 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:17:26 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:23:08 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m2:23:35 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:29:27 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:29:34 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/config.js[22m
+[2m2:34:48 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m2:34:59 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mpublic/ames-corner.html[22m
+[2m2:35:10 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mames-corner.html[22m
+[2m2:47:55 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mpublic/ames-corner.html[22m
+[2m2:48:06 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mames-corner.html[22m
+[2m2:54:19 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m3:12:27 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m3:13:42 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m3:25:05 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m3:27:22 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/data-sources.js[22m
+[2m3:48:18 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+[2m3:50:42 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mpublic/ames-corner.html[22m
+[2m3:50:53 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mames-corner.html[22m
+[2m3:56:31 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mpublic/ames-corner.html[22m
+[2m3:56:46 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mames-corner.html[22m
+[2m3:59:15 am[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Dev/Windose-OS/windose-os/src/ames-corner/social-hub/render.js[22m
+
+c:\Dev\Windose-OS\windose-os>

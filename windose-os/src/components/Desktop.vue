@@ -77,6 +77,7 @@
       :taskbarHeight="iconTaskbarHeight"
       :doubleClickMs="iconDoubleClickMs"
       :notifications="false"
+      :hinting="app.id === 'trash' && props.trashHintVisible"
       :viewportWidth="props.viewportWidth"
       :viewportHeight="props.viewportHeight"
       :viewportScale="props.viewportScale"
@@ -105,7 +106,7 @@ import type { MedicineType } from '../stores/medicine';
 import type { WindowState, WindowAppType, SettingsSchema, SettingValue, TimeSlot } from '../types';
 
 
-const props = defineProps<{ windows: WindowState[]; settings: SettingsSchema; saveError: string | null; webcamSeed: number; webcamMadPhase: 'idle' | 'hover' | 'release'; viewportWidth: number; viewportHeight: number; viewportScale: number; timeSlot: TimeSlot; }>();
+const props = defineProps<{ windows: WindowState[]; settings: SettingsSchema; saveError: string | null; webcamSeed: number; webcamMadPhase: 'idle' | 'hover' | 'release'; viewportWidth: number; viewportHeight: number; viewportScale: number; timeSlot: TimeSlot; trashHintVisible?: boolean; }>();
 const emit = defineEmits<{
   (e: 'open', app: WindowAppType): void;
   (e: 'launchAmeCorner'): void;

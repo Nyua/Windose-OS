@@ -10,7 +10,7 @@
     </button>
     <div class="quick">
       <button class="quick-btn tweeter" @click="openApp('tweeter')" aria-label="Tweeter">Tweeter</button>
-      <button class="quick-btn jine" :class="{ notify: jineUnreadCount > 0 }" @click="openApp('jine')" aria-label="JINE">JINE</button>
+      <button class="quick-btn jine" :class="{ notify: jineUnreadCount > 0 }" @click="openApp('jine')" @pointerenter="$emit('quickButtonHover', 'jine', true)" @pointerleave="$emit('quickButtonHover', 'jine', false)" aria-label="JINE">JINE</button>
       <button class="quick-btn task" @click="openApp('task')" aria-label="Task Manager">Task</button>
     </div>
     <div class="tabs" ref="tabsRef">
@@ -18,6 +18,7 @@
         v-for="win in windows"
         :key="win.id"
         :data-window-id="win.id"
+        :title="win.title"
         class="tab"
         :class="{ focused: win.isFocused, active: !win.isMinimized, notify: win.appType === 'jine' && jineUnreadCount > 0 }"
         @click="$emit('tabClick', win.id)"
@@ -33,6 +34,7 @@
           max="1"
           step="0.01"
           :value="volume"
+          :title="`Volume: ${volumePercent}%`"
           @input="$emit('volumeChange', Number(($event.target as HTMLInputElement).value))"
         />
       </div>
@@ -54,6 +56,7 @@ const emit = defineEmits<{
   (e: 'tabClick', id: string): void;
   (e: 'open', app: WindowAppType): void;
   (e: 'volumeChange', vol: number): void;
+  (e: 'quickButtonHover', button: string, hovering: boolean): void;
 }>();
 
 function openApp(app: WindowAppType) {
@@ -75,6 +78,8 @@ const tabWidth = computed(() => {
   if (!Number.isFinite(per)) return tabMaxWidth;
   return Math.max(0, Math.min(tabMaxWidth, per));
 });
+
+const volumePercent = computed(() => Math.round(props.volume * 100));
 
 let tabsObserver: ResizeObserver | null = null;
 let resizeFallback: (() => void) | null = null;
